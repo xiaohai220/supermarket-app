@@ -257,14 +257,15 @@ async function main() {
     api.setVal('cs-price', '4500');
     api.setVal('cs-contact', '0300-1234567');
     api.setVal('cs-consignor', '阿里');
+    api.setVal('cs-pwd', 'mypwd123');
     api.runAction('consign-submit', '', null);
     check('3.2 提交后生成 pending 记录', api.S.consign.length === 1 && api.S.consign[0].status === 'pending');
-    check('3.3 寄售字段完整', api.S.consign[0].title === '九成新自行车' && near(api.S.consign[0].price, 4500, 0.001) && api.S.consign[0].contact === '0300-1234567');
+    check('3.3 寄售字段完整(含卖家密码)', api.S.consign[0].title === '九成新自行车' && near(api.S.consign[0].price, 4500, 0.001) && api.S.consign[0].contact === '0300-1234567' && api.S.consign[0].pwd === 'mypwd123');
 
     // 缺联系电话应拒绝
     const before = api.S.consign.length;
     api.go('#/consign?new=1'); api.render();
-    api.setVal('cs-title', '缺电话'); api.setVal('cs-price', '10'); api.setVal('cs-contact', '');
+    api.setVal('cs-title', '缺电话'); api.setVal('cs-price', '10'); api.setVal('cs-contact', ''); api.setVal('cs-pwd', 'x');
     api.runAction('consign-submit', '', null);
     check('3.4 缺联系电话被拒绝', api.S.consign.length === before);
 
@@ -272,24 +273,10 @@ async function main() {
     const onSale = api.S.consign.filter(c => c.status === 'on').length;
     check('3.5 待审核物品不进入客户在售列表', onSale === 0);
 
-    // 管理员审核上架（需先输入管理口令）
+    // 管理员直接上架（不再要口令）
     api.go('#/admin?tab=consign'); api.render();
     api.runAction('consign-approve', api.S.consign[0].id, null);
-    api.setVal('pwd-input', '123456');
-    api.runAction('pwd-ok', '', null);
     check('3.6 管理员上架后状态变为 on', api.S.consign[0].status === 'on');
-
-    // 密码错误不上架（同一 api 内再加一条待审核物品测试）
-    api.S.consign.push({ id: 'g9', title: '密码测试物', price: 1, contact: '9', status: 'pending', createTime: '2026-01-01' });
-    api.runAction('consign-approve', 'g9', null);
-    api.setVal('pwd-input', 'wrong');
-    api.runAction('pwd-ok', '', null);
-    check('3.6b 密码错误上架被拒绝', api.S.consign.find(x=>x.id==='g9').status === 'pending');
-    // 用正确口令上架该条
-    api.runAction('consign-approve', 'g9', null);
-    api.setVal('pwd-input', '123456');
-    api.runAction('pwd-ok', '', null);
-    check('3.6c 密码正确后上架', api.S.consign.find(x=>x.id==='g9').status === 'on');
 
     // 客户在售列表现在能看到
     api.go('#/consign'); api.render();
@@ -299,6 +286,26 @@ async function main() {
     api.setVal('cs-query', '1234567');
     api.runAction('consign-query', '', null);
     check('3.8 按联系电话查询到寄售记录', api.CS.results && api.CS.results.length === 1);
+
+    // 买家提交手机号
+    api.S.consign[0].buyers = [];
+    api.setVal('cs-buy-phone', '0311-9999');
+    api.runAction('consign-buy-submit', api.S.consign[0].id, null);
+    check('3.8b 买家提交手机号后记录在物品上', api.S.consign[0].buyers && api.S.consign[0].buyers[0].phone === '0311-9999');
+
+    // 卖家查看买家手机号：先输错密码被拒
+    api.go('#/consign'); api.render();
+    api.setVal('cs-query', '1234567');
+    api.runAction('consign-query', '', null);
+    api.runAction('consign-view-buyers-open', '', null);
+    api.setVal('pwd-input', 'wrong');
+    api.runAction('consign-view-buyers', '', null);
+    check('3.8c 卖家密码错误不显示买家', api.CS.showBuyers === false);
+    // 输对自己设的密码
+    api.runAction('consign-view-buyers-open', '', null);
+    api.setVal('pwd-input', 'mypwd123');
+    api.runAction('consign-view-buyers', '', null);
+    check('3.8d 卖家密码正确后显示买家', api.CS.showBuyers === true);
 
     // 管理员标记售出
     api.go('#/admin?tab=consign'); api.render();

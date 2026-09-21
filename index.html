@@ -397,7 +397,8 @@ const I18N = {
     consignRequireTitle:'请填写物品名称', consignRequirePrice:'请填写正确的价格', consignRequireContact:'请填写联系电话',
     consignNoResult:'未找到该联系电话的寄售记录', consignSubmitTime:'提交时间', consignContact:'联系电话', consignConsignor:'寄售人',
     consignBuy:'我要购买', consignBuyPhone:'买家手机号', consignBuyPhonePh:'请输入您的手机号', consignBuyPhoneRequired:'请填写买家手机号', consignBuySubmitted:'已提交，卖家会联系您', consignBuyers:'买家联系',
-    consignApprovePwd:'上架需验证管理口令', consignBuyersPwd:'查看买家手机号需验证管理口令', consignViewBuyers:'查看买家手机号',
+    consignApprovePwd:'上架需验证管理口令', consignBuyersPwd:'输入您发布时设置的寄售密码', consignViewBuyers:'查看买家手机号',
+    consignPwdLabel:'设置查看密码', consignPwdPh:'以后用这个密码查看买家联系方式', consignPwdRequired:'请设置查看密码', consignPwdWrong:'密码不正确',
     consignPriceUnit:'价格',
     adminTitle:'管理模式', adminDesc:'本机维护入口，客户界面不显示',
     loginTitle:'输入管理口令', loginBtn:'进入', wrongPassword:'口令不正确',
@@ -460,7 +461,8 @@ const I18N = {
     consignRequireTitle:'Please enter an item name', consignRequirePrice:'Please enter a valid price', consignRequireContact:'Please enter a contact phone',
     consignNoResult:'No consignment found for this phone number', consignSubmitTime:'Submitted', consignContact:'Phone', consignConsignor:'Consignor',
     consignBuy:'I want to buy', consignBuyPhone:'Buyer phone', consignBuyPhonePh:'Enter your phone number', consignBuyPhoneRequired:'Please enter buyer phone', consignBuySubmitted:'Sent, the seller will contact you', consignBuyers:'Buyers',
-    consignApprovePwd:'Enter staff password to list', consignBuyersPwd:'Enter staff password to reveal buyer phones', consignViewBuyers:'View buyer phones',
+    consignApprovePwd:'Enter staff password to list', consignBuyersPwd:'Enter the password you set when listing', consignViewBuyers:'View buyer phones',
+    consignPwdLabel:'Set a viewing password', consignPwdPh:'Use it later to reveal buyer contacts', consignPwdRequired:'Please set a viewing password', consignPwdWrong:'Incorrect password',
     consignPriceUnit:'Price',
     adminTitle:'Staff Mode', adminDesc:'Local maintenance, hidden from customers',
     loginTitle:'Enter staff password', loginBtn:'Enter', wrongPassword:'Incorrect password',
@@ -829,6 +831,7 @@ function viewConsign(){
           '<div class="field"><label>'+esc(t('consignContactLabel'))+'</label><input type="text" id="cs-contact" data-enter="consign-submit"></div>'+
         '</div>'+
         '<div class="field"><label>'+esc(t('consignorLabel'))+'</label><input type="text" id="cs-consignor"></div>'+
+        '<div class="field"><label>'+esc(t('consignPwdLabel'))+'</label><input type="password" id="cs-pwd" placeholder="'+esc(t('consignPwdPh'))+'" autocomplete="new-password"></div>'+
         '<div class="field"><label>'+esc(t('consignPhotoLabel'))+'</label>'+prev+
           '<div style="display:flex;gap:8px">'+
             '<button class="btn btn-ghost btn-sm" data-action="consign-img-pick">'+ICONS.upload+esc(t('chooseImage'))+'</button>'+
@@ -857,7 +860,7 @@ function viewConsign(){
             .map(c=>'<div class="prow-sub" style="color:#ff6b35">'+ICONS.info+' <b>'+esc(c.title)+'</b>：'+
               c.buyers.map(b=>'<span class="num">'+esc(b.phone)+'</span> <span style="opacity:.7">('+esc(fmtDT(b.time))+')</span>').join('， ')+'</div>').join('');
         }else{
-          buyerSection = '<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" data-action="consign-view-buyers">'+ICONS.lock+esc(t('consignViewBuyers'))+'</button></div>';
+          buyerSection = '<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" data-action="consign-view-buyers-open">'+ICONS.lock+esc(t('consignViewBuyers'))+'</button></div>';
         }
       }
       queryHtml = '<div class="card admin-panel" style="margin-top:16px"><h3 style="margin-bottom:10px">'+esc(t('consignQueryTitle'))+'</h3>'+
@@ -1303,10 +1306,12 @@ function runAction(action, id, el){
       const price = parseFloat((document.getElementById('cs-price')||{}).value);
       const contact = ((document.getElementById('cs-contact')||{}).value||'').trim();
       const consignor = ((document.getElementById('cs-consignor')||{}).value||'').trim();
+      const pwd = ((document.getElementById('cs-pwd')||{}).value||'').trim();
       if(!title.trim()){ toast(t('consignRequireTitle')); break; }
       if(isNaN(price) || price<0){ toast(t('consignRequirePrice')); break; }
       if(!contact){ toast(t('consignRequireContact')); break; }
-      S.consign.push({ id:uid(), title:title.trim(), desc:desc.trim(), price:price, contact:contact, consignor:consignor, photo:FORM_CONSIGN_IMG, status:'pending', createTime:new Date().toISOString(), soldTime:null });
+      if(!pwd){ toast(t('consignPwdRequired')); break; }
+      S.consign.push({ id:uid(), title:title.trim(), desc:desc.trim(), price:price, contact:contact, consignor:consignor, pwd:pwd, photo:FORM_CONSIGN_IMG, status:'pending', createTime:new Date().toISOString(), soldTime:null });
       FORM_CONSIGN_IMG = '';
       if(!saveConsign()){ toast(t('storageError')); break; }
       toast(t('consignSubmitted'));
@@ -1328,15 +1333,27 @@ function runAction(action, id, el){
     /* 寄售管理 */
     case 'consign-filter': CSM.filter = id; render(); break;
     case 'consign-approve': {
-      pwdPrompt(t('consignApprovePwd'), ()=>{
-        const c=S.consign.find(x=>x.id===id); if(c){ c.status='on'; saveConsign(); render(); }
-      });
+      const c=S.consign.find(x=>x.id===id); if(c){ c.status='on'; saveConsign(); render(); }
       break;
     }
     case 'consign-view-buyers': {
-      pwdPrompt(t('consignBuyersPwd'), ()=>{
-        CS.showBuyers = true; render();
-      });
+      const v = (document.getElementById('pwd-input')||{}).value||'';
+      const ok = CS.results && CS.results.length && CS.results.some(c=>c.pwd===v);
+      if(!ok){ toast(t('consignPwdWrong')); break; }
+      closeModal();
+      CS.showBuyers = true; render();
+      break;
+    }
+    case 'consign-view-buyers-open': {
+      openModal(
+        '<h3>'+esc(t('consignViewBuyers'))+'</h3>'+
+        '<p style="color:var(--ink-3);font-size:13px;margin-bottom:12px">'+esc(t('consignBuyersPwd'))+'</p>'+
+        '<div class="field"><label>'+esc(t('consignPwdLabel'))+'</label><input type="password" id="pwd-input" autocomplete="off" autofocus></div>'+
+        '<div class="modal-actions">'+
+          '<button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('cancel'))+'</button>'+
+          '<button class="btn btn-primary" data-action="consign-view-buyers">'+esc(t('confirm'))+'</button>'+
+        '</div>'
+      );
       break;
     }
     case 'consign-mark-sold': {
