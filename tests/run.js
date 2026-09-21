@@ -156,7 +156,7 @@ async function main() {
   {
     const api = boot();
     api.openProductForm(null);
-    api.setVal('pi-zh', '苹果'); api.setVal('pi-en', 'Apple');
+    api.setVal('pi-zh', '苹果');
     api.setVal('pi-price', '35'); api.setVal('pi-unit', '500g'); api.setVal('pi-cat', 'c1');
     api.runAction('product-save', '', null);
     check('1.2 新增商品后 S.products 数量 +1', api.S.products.length === 1);
