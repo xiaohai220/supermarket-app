@@ -602,7 +602,7 @@ function consignCardHtml(c, cur){
   if(c.status==='pending') stTag='<span class="xy-status st-pending">'+esc(t('consignStatusPending'))+'</span>';
   else if(sold) stTag='<span class="xy-status st-sold">'+esc(t('consignStatusSold'))+'</span>';
   const initial = (c.consignor||c.contact||'闲').trim().charAt(0).toUpperCase();
-  return '<div class="xy-card">'+
+  return '<div class="xy-card" data-action="consign-detail" data-id="'+esc(c.id)+'" style="cursor:pointer">'+
     '<div class="xy-img">'+img+stTag+(sold?'<div class="xy-sold">'+esc(t('consignStatusSold'))+'</div>':'')+'</div>'+
     '<div class="xy-body">'+
       '<div class="xy-title">'+esc(c.title)+(c.desc?' <span style="color:var(--ink-3);font-weight:400">'+esc(c.desc)+'</span>':'')+'</div>'+
@@ -610,7 +610,6 @@ function consignCardHtml(c, cur){
       '<div class="xy-meta">'+
         '<span class="xy-avatar">'+esc(initial)+'</span>'+
         '<span class="xy-seller">'+esc(c.consignor||c.contact||'卖家')+'</span>'+
-        (sold?'':'<span class="xy-want">'+esc(t('xianyuWant'))+'</span>')+
       '</div>'+
     '</div>'+
   '</div>';
@@ -1212,6 +1211,27 @@ function runAction(action, id, el){
     /* 二手寄售（客户） */
     case 'consign-publish': location.hash = '#/consign?new=1'; break;
     case 'consign-back': location.hash = '#/consign'; break;
+    case 'consign-detail': {
+      const c = S.consign.find(x=>x.id===id);
+      if(!c) break;
+      const cur = S.settings.baseCurrency || 'PKR';
+      const img = c.photo ? '<img src="'+esc(c.photo)+'" style="width:100%;max-height:300px;object-fit:cover;border-radius:12px;display:block" alt="">'
+        : '<div style="aspect-ratio:1/1;background:#f1f3f5;border-radius:12px;display:grid;place-items:center;color:#adb5bd">'+ICONS.tag+'</div>';
+      openModal(
+        '<h3 style="margin-bottom:12px">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</h3>'+
+        img+
+        '<div class="xy-price" style="font-size:26px;margin:14px 0 6px"><span class="cur" style="font-size:14px">'+esc(cur)+'</span>'+esc(fmtMoney(c.price))+'</div>'+
+        (c.desc?'<p style="color:var(--ink-2);font-size:14px;line-height:1.6;margin:8px 0">'+esc(c.desc)+'</p>':'')+
+        '<div style="margin-top:12px;font-size:13px;color:var(--ink-2);line-height:2">'+
+          '<div>'+ICONS.info+' <b>'+esc(t('consignConsignor'))+'：</b>'+esc(c.consignor||'—')+'</div>'+
+          '<div>'+ICONS.shelf+' <b>'+esc(t('consignContactLabel'))+'：</b><span class="num">'+esc(c.contact||'—')+'</span></div>'+
+          '<div>'+ICONS.clock+' <b>'+esc(t('consignSubmitTime'))+'：</b><span class="num">'+esc(fmtDT(c.createTime))+'</span></div>'+
+          (c.soldTime?'<div>'+ICONS.clock+' <b>'+esc(t('consignStatusSold'))+'：</b><span class="num">'+esc(fmtDT(c.soldTime))+'</span></div>':'')+
+        '</div>'+
+        '<div style="margin-top:16px;display:flex;justify-content:flex-end"><button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('close'))+'</button></div>'
+      );
+      break;
+    }
     case 'consign-submit': {
       const title = (document.getElementById('cs-title')||{}).value||'';
       const desc = (document.getElementById('cs-desc')||{}).value||'';
