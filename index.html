@@ -569,6 +569,36 @@ const LS = {
 const KEYS = { settings:'sm_settings', products:'sm_products', parcels:'sm_parcels', consign:'sm_consign' };
 const S = { settings:null, products:[], parcels:[], consign:[] };
 
+// 经由 http(s) 访问时，数据与所有访问者共享（存于服务器 data.json）；file:// 打开时仍用本机 localStorage
+const USE_REMOTE = (typeof location!=='undefined' && location.protocol && location.protocol.indexOf('http')===0);
+let _remoteTimer=null;
+function remoteSync(){
+  if(!USE_REMOTE) return;
+  clearTimeout(_remoteTimer);
+  _remoteTimer=setTimeout(()=>{
+    try{ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{}); }catch(e){}
+  },300);
+}
+async function remoteInit(){
+  if(!USE_REMOTE) return;
+  try{
+    const r=await fetch('/api/state',{cache:'no-store'});
+    if(!r.ok) return;
+    const d=await r.json()||{};
+    if(d.settings && typeof d.settings==='object') S.settings=Object.assign(defaultSettings(),d.settings);
+    if(Array.isArray(d.products)) S.products=d.products;
+    if(Array.isArray(d.parcels)) S.parcels=d.parcels;
+    if(Array.isArray(d.consign)) S.consign=d.consign;
+    lang=(S.settings.lang==='en')?'en':'zh';
+    // 服务器首次为空：种入示例数据并上传
+    if(S.parcels.length===0 && S.products.length===0){
+      seedDemoOnce();
+      remoteSync();
+    }
+    render();
+  }catch(e){}
+}
+
 function defaultSettings(){
   return {
     lang:'zh',
@@ -624,10 +654,10 @@ function seedDemoOnce(){
   saveProducts(); saveParcels();
   try{ localStorage.setItem('sm_demo_v2','1'); }catch(e){}
 }
-function saveSettings(){ return LS.set(KEYS.settings, S.settings); }
-function saveProducts(){ return LS.set(KEYS.products, S.products); }
-function saveParcels(){ return LS.set(KEYS.parcels, S.parcels); }
-function saveConsign(){ return LS.set(KEYS.consign, S.consign); }
+function saveSettings(){ const ok=LS.set(KEYS.settings, S.settings); remoteSync(); return ok; }
+function saveProducts(){ const ok=LS.set(KEYS.products, S.products); remoteSync(); return ok; }
+function saveParcels(){ const ok=LS.set(KEYS.parcels, S.parcels); remoteSync(); return ok; }
+function saveConsign(){ const ok=LS.set(KEYS.consign, S.consign); remoteSync(); return ok; }
 
 /* ===== 工具函数 ===== */
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -1739,6 +1769,16 @@ window.addEventListener('scroll', ()=>{ window.__SM_SCROLL = window.scrollY||0; 
 load();
 render();
 applyTheme();
+remoteInit();
+// 共享模式下每 8 秒拉取一次服务器最新数据（不覆盖正在输入的内容）
+if(USE_REMOTE){
+  setInterval(()=>{
+    const focus=document.activeElement;
+    const typing = focus && (focus.tagName==='INPUT' || focus.tagName==='SELECT' || focus.tagName==='TEXTAREA');
+    if(typing) return;
+    remoteInit();
+  },8000);
+}
 
 /* ===== PWA：部署到 https 后注册 service worker，支持添加到主屏幕 ===== */
 (function(){
