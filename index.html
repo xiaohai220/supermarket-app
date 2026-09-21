@@ -96,6 +96,14 @@ svg{display:block;flex-shrink:0}
 .home-foot{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:6px}
 .foot-note{font-size:12px;color:rgba(255,255,255,.6)}
 
+/* ===== 白天主题（柔和护眼风景） ===== */
+body.day{background:linear-gradient(180deg,#cfe6f5 0%,#e7f1e3 55%,#d4e7cc 100%)}
+body.day .brand{color:#2f6b4f;text-shadow:none}
+body.day .brand-sub{color:#4a5d52}
+body.day .foot-note{color:#5a6b60}
+body.day .barcode{background:repeating-linear-gradient(90deg,#2f6b4f 0 14px,#1f8a55 14px 18px,#cde6d6 18px 26px);opacity:1}
+body.night .barcode{opacity:.9}
+
 /* ============ 工具栏 / 搜索 ============ */
 .toolbar{padding:14px 16px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px}
 .search-wrap{position:relative;display:flex;align-items:center}
@@ -299,6 +307,8 @@ const ICONS = {
   shelf:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/></svg>',
   arrow:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>',
   globe:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>',
+  moon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  sun:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>',
   download:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>',
   upload:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>',
   info:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>',
@@ -470,6 +480,7 @@ const S = { settings:null, products:[], parcels:[], rates:null, convHistory:[] }
 function defaultSettings(){
   return {
     lang:'zh',
+    theme:'night',
     adminPass:'123456',
     baseCurrency:'PKR',
     showCurrencies:['USD','EUR','GBP','JPY','CNY','AED','SAR','INR','CAD','AUD','CHF','SGD','MYR','THB','KRW'],
@@ -737,6 +748,10 @@ function afterRatesView(){
 }
 
 /* ===== 顶栏（子页共用） ===== */
+function themeBtn(){
+  const isNight = (S.settings.theme!=='day');
+  return '<button class="icon-btn" data-action="toggle-theme" title="'+esc(isNight?'白天':'夜晚')+'">'+(isNight?ICONS.sun:ICONS.moon)+'</button>';
+}
 function pageHead(title){
   return '<header class="topbar">'+
     '<div class="page-head" style="width:100%;margin:0">'+
@@ -744,7 +759,7 @@ function pageHead(title){
         '<button class="icon-btn" data-action="back" aria-label="'+esc(t('back'))+'">'+ICONS.back+'</button>'+
         '<h1 style="font-size:20px;font-weight:800;color:var(--green-dark)">'+esc(title)+'</h1>'+
       '</div>'+
-      '<button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button>'+
+      '<div class="topbar-right">'+themeBtn()+'<button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button></div>'+
     '</div>'+
   '</header><div class="barcode"></div>';
 }
@@ -769,7 +784,7 @@ function viewHome(){
         '<h1 class="brand">'+esc(storeName)+'</h1>'+
         '<div class="brand-sub">'+esc(t('appSub'))+' · '+esc(todayLine())+'</div>'+
       '</div>'+
-      '<div class="topbar-right"><button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button></div>'+
+      '<div class="topbar-right">'+themeBtn()+'<button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button></div>'+
     '</header>'+
     '<div class="barcode"></div>'+
     '<main class="home-main">'+
@@ -1227,6 +1242,12 @@ function runAction(action, id, el){
       saveSettings();
       render();
       break;
+    case 'toggle-theme':
+      S.settings.theme = (S.settings.theme==='day') ? 'night' : 'day';
+      saveSettings();
+      applyTheme();
+      render();
+      break;
     case 'open-admin':
       if(ADMIN_OK){ go('#/admin'); } else { openLogin(); }
       break;
@@ -1406,8 +1427,19 @@ window.addEventListener('hashchange', render);
 /* ===== 启动 ===== */
 load();
 render();
+applyTheme();
 
-/* ===== 星空背景：闪烁星星 + 偶尔流星 ===== */
+/* ===== 白天 / 夜晚主题 ===== */
+function applyTheme(){
+  try{
+    const day = S.settings.theme==='day';
+    document.body.classList.toggle('day', day);
+    document.body.classList.toggle('night', !day);
+    if(window.__setBgMode) window.__setBgMode(day?'day':'night');
+  }catch(e){}
+}
+
+/* ===== 动态背景：夜晚星空 + 流星；白天柔和风景 ===== */
 (function(){
   if(typeof window==='undefined' || !window.requestAnimationFrame || !document.createElement) return;
   try{
@@ -1416,9 +1448,8 @@ render();
     document.body.appendChild(c);
     const ctx=c.getContext('2d');
     if(!ctx) return;
-    let stars=[],shoot=null,w=0,h=0;
-    function resize(){
-      w=c.width=window.innerWidth; h=c.height=window.innerHeight;
+    let mode='night', stars=[], clouds=[], shooting=null, w=0, h=0;
+    function initStars(){
       const n=Math.min(220,Math.floor(w*h/4500));
       stars=[];
       for(let i=0;i<n;i++){
@@ -1426,34 +1457,87 @@ render();
           r:Math.random()*1.3+0.3, p:Math.random()*Math.PI*2, s:Math.random()*0.03+0.006});
       }
     }
+    function initClouds(){
+      clouds=[];
+      const n=6;
+      for(let i=0;i<n;i++){
+        clouds.push({x:Math.random()*w, y:Math.random()*h*0.4+30,
+          s:0.6+Math.random()*0.9, v:0.15+Math.random()*0.25, o:0.35+Math.random()*0.3});
+      }
+    }
+    function resize(){
+      w=c.width=window.innerWidth; h=c.height=window.innerHeight;
+      initStars(); initClouds();
+    }
     window.addEventListener('resize',resize); resize();
+    window.__setBgMode=function(m){ mode=m; shooting=null; };
+    if(S.settings && S.settings.theme==='day'){ mode='day'; }
+    function drawCloud(cl){
+      ctx.globalAlpha=cl.o;
+      ctx.fillStyle='#ffffff';
+      ctx.beginPath();
+      ctx.ellipse(cl.x, cl.y, 70*cl.s, 22*cl.s, 0, 0, Math.PI*2);
+      ctx.ellipse(cl.x-40*cl.s, cl.y+6*cl.s, 45*cl.s, 16*cl.s, 0, 0, Math.PI*2);
+      ctx.ellipse(cl.x+42*cl.s, cl.y+5*cl.s, 48*cl.s, 17*cl.s, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
     function loop(){
       ctx.clearRect(0,0,w,h);
-      for(let i=0;i<stars.length;i++){
-        const s=stars[i]; s.p+=s.s;
-        const a=0.35+Math.abs(Math.sin(s.p))*0.55;
-        ctx.globalAlpha=a; ctx.fillStyle='#dce8ff';
-        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
-      }
-      ctx.globalAlpha=1;
-      if(!shoot && Math.random()<0.006){
-        shoot={x:Math.random()*w*0.7+w*0.3, y:Math.random()*h*0.35,
-          vx:-(5+Math.random()*4), vy:2.5+Math.random()*2, life:1};
-      }
-      if(shoot){
-        shoot.x+=shoot.vx; shoot.y+=shoot.vy; shoot.life-=0.014;
-        const tx=shoot.x-shoot.vx*14, ty=shoot.y-shoot.vy*14;
-        const g=ctx.createLinearGradient(shoot.x,shoot.y,tx,ty);
-        g.addColorStop(0,'rgba(255,255,255,'+Math.max(0,shoot.life)+')');
-        g.addColorStop(1,'rgba(255,255,255,0)');
-        ctx.strokeStyle=g; ctx.lineWidth=1.6; ctx.lineCap='round';
-        ctx.beginPath(); ctx.moveTo(shoot.x,shoot.y); ctx.lineTo(tx,ty); ctx.stroke();
-        if(shoot.life<=0 || shoot.y>h || shoot.x<0) shoot=null;
+      if(mode==='night'){
+        for(let i=0;i<stars.length;i++){
+          const s=stars[i]; s.p+=s.s;
+          ctx.globalAlpha=0.35+Math.abs(Math.sin(s.p))*0.55;
+          ctx.fillStyle='#dce8ff';
+          ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+        }
+        ctx.globalAlpha=1;
+        if(!shooting && Math.random()<0.006){
+          shooting={x:Math.random()*w*0.7+w*0.3, y:Math.random()*h*0.35,
+            vx:-(5+Math.random()*4), vy:2.5+Math.random()*2, life:1};
+        }
+        if(shooting){
+          shooting.x+=shooting.vx; shooting.y+=shooting.vy; shooting.life-=0.014;
+          const tx=shooting.x-shooting.vx*14, ty=shooting.y-shooting.vy*14;
+          const g=ctx.createLinearGradient(shooting.x,shooting.y,tx,ty);
+          g.addColorStop(0,'rgba(255,255,255,'+Math.max(0,shooting.life)+')');
+          g.addColorStop(1,'rgba(255,255,255,0)');
+          ctx.strokeStyle=g; ctx.lineWidth=1.6; ctx.lineCap='round';
+          ctx.beginPath(); ctx.moveTo(shooting.x,shooting.y); ctx.lineTo(tx,ty); ctx.stroke();
+          if(shooting.life<=0 || shooting.y>h || shooting.x<0) shooting=null;
+        }
+      }else{
+        // 白天：柔太阳
+        const sx=w*0.82, sy=h*0.18, sr=46;
+        const glow=ctx.createRadialGradient(sx,sy,0,sx,sy,sr*3);
+        glow.addColorStop(0,'rgba(255,247,214,0.95)');
+        glow.addColorStop(0.4,'rgba(255,236,170,0.45)');
+        glow.addColorStop(1,'rgba(255,236,170,0)');
+        ctx.globalAlpha=1; ctx.fillStyle=glow;
+        ctx.beginPath(); ctx.arc(sx,sy,sr*3,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#FFF3C4';
+        ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2); ctx.fill();
+        // 缓坡
+        ctx.fillStyle='rgba(168,206,160,0.55)';
+        ctx.beginPath(); ctx.moveTo(0,h);
+        ctx.bezierCurveTo(w*0.25,h*0.86, w*0.6,h*0.95, w,h*0.88);
+        ctx.lineTo(w,h); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='rgba(140,186,140,0.5)';
+        ctx.beginPath(); ctx.moveTo(0,h);
+        ctx.bezierCurveTo(w*0.3,h*0.93, w*0.7,h*0.84, w,h*0.96);
+        ctx.lineTo(w,h); ctx.closePath(); ctx.fill();
+        // 慢飘云
+        for(let i=0;i<clouds.length;i++){
+          const cl=clouds[i];
+          cl.x+=cl.v;
+          if(cl.x-cl.s*120>w){ cl.x=-cl.s*120; cl.y=Math.random()*h*0.4+30; }
+          drawCloud(cl);
+        }
+        ctx.globalAlpha=1;
       }
       requestAnimationFrame(loop);
     }
     loop();
-  }catch(e){ /* 环境不支持时静默降级，不影响功能 */ }
+  }catch(e){}
 })();
 </script>
 </body>

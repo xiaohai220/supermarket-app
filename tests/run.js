@@ -138,6 +138,12 @@ async function main() {
     check('0.11 路由到快递页并渲染', api.appHtml().includes('parcels') || /快递|Parcel/i.test(api.appHtml()));
     api.go('#/rates'); api.render();
     check('0.12 路由到汇率页并渲染', api.appHtml().includes('rates') || /汇率|Rate/i.test(api.appHtml()));
+    // 主题切换持久化
+    const before = api.S.settings.theme;
+    api.runAction('toggle-theme', '', null);
+    check('0.13 主题切换并持久化到 localStorage', JSON.parse(api.store['sm_settings']).theme !== before);
+    api.runAction('toggle-theme', '', null);
+    check('0.14 主题切回原状态', api.S.settings.theme === before);
   }
 
   // ===== 阶段1 商品展示 =====
