@@ -396,9 +396,9 @@ const I18N = {
     parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
     parcelName:'收件人昵称', parcelNamePh:'如：阿里妈妈',
     parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', plistPh:'搜昵称 / 单号 / 单号后四位 / 编号', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
-    statusReview:'取件中', reviewTip:'已申请取件，等待店员确认', requestPickTip:'点击申请取件', requestBadge:'客户申请取件', requestSent:'已提交取件申请，等待店员确认', rejectRequest:'驳回申请', rejected:'已驳回申请', withdrawTip:'再次点击撤回取件申请', withdrawn:'已撤回取件申请',
+    statusReview:'取件中', reviewTip:'已申请取件，等待店员确认', requestPickTip:'点击申请取件', requestBadge:'客户申请取件', requestSent:'已提交取件申请，等待店员确认', rejectRequest:'驳回申请', rejected:'已驳回申请', withdrawTip:'再次点击撤回取件申请', withdrawn:'已撤回取件申请', requestTime:'申请时间',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
-    enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取走',
+    enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取件',
     arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
     notFoundTitle:'未找到该运单', notFoundDesc:'请核对运单号是否输入正确，或到服务台咨询工作人员。',
     resultFound:'查询结果',
@@ -464,7 +464,7 @@ const I18N = {
     parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
     parcelName:'Recipient nickname', parcelNamePh:'e.g. Auntie Li',
     parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', plistPh:'Search name / No. / last 4 / pickup No.', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
-    statusReview:'Picking up', reviewTip:'Pickup requested, waiting for staff', requestPickTip:'Tap to request pickup', requestBadge:'Customer requested pickup', requestSent:'Pickup request sent, waiting for staff', rejectRequest:'Reject request', rejected:'Request rejected', withdrawTip:'Tap again to withdraw request', withdrawn:'Request withdrawn',
+    statusReview:'Picking up', reviewTip:'Pickup requested, waiting for staff', requestPickTip:'Tap to request pickup', requestBadge:'Customer requested pickup', requestSent:'Pickup request sent, waiting for staff', rejectRequest:'Reject request', rejected:'Request rejected', withdrawTip:'Tap again to withdraw request', withdrawn:'Request withdrawn', requestTime:'Requested at',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
     arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
@@ -909,6 +909,7 @@ function publicParcelList(){
       const metaParts = [];
       if(p.note) metaParts.push(esc(p.note));
       if(p.name) metaParts.push(esc(p.name));
+      if(p.requested && p.requestTime) metaParts.push('<span class="tag">'+esc(t('requestTime'))+' '+esc(fmtDT(p.requestTime))+'</span>');
       return '<div class="p2'+(off?' off':'')+'">'+
         '<div class="p2-main">'+
           '<div class="p2-no num">'+esc(p.trackingNo)+'</div>'+
@@ -1128,6 +1129,7 @@ function adminParcels(){
       if(p.tail) metaParts.push('<span class="tag">'+esc(t('parcelTail'))+'</span> '+esc(p.tail));
       if(p.note) metaParts.push(esc(p.note));
       if(p.name) metaParts.push(esc(p.name));
+      if(p.requested && p.requestTime) metaParts.push('<span class="tag">'+esc(t('requestTime'))+' '+esc(fmtDT(p.requestTime))+'</span>');
       return '<div class="p2'+(off?' off':'')+'">'+
         '<div class="p2-main">'+
           '<div class="p2-no num">'+esc(p.trackingNo)+(p.requested?' <span class="badge b-review" style="margin-left:6px">'+esc(t('requestBadge'))+'</span>':'')+'</div>'+
