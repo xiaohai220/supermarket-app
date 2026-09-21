@@ -868,13 +868,6 @@ function viewParcels(){
     }
   }
   return pageHead(t('parcelsTitle'))+
-    '<div class="card p-search">'+
-      '<h2>'+esc(t('parcelsTitle'))+'</h2>'+
-      '<div class="query-row">'+
-        '<div class="search-wrap">'+ICONS.search+'<input id="p-tracking" data-enter="parcel-query" placeholder="'+esc(t('trackingPlaceholder'))+'" value="'+esc(PQ.tracking)+'"></div>'+
-        '<button class="btn btn-primary" data-action="parcel-query">'+ICONS.search+esc(t('checkBtn'))+'</button>'+
-      '</div>'+
-    '</div>'+
     resultHtml+
     publicParcelList();
 }
