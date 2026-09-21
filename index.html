@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>超市客户服务</title>
+<style>
+/* ============ 设计变量 ============ */
+:root{
+  --bg:#F2F6F1;
+  --surface:#FFFFFF;
+  --line:#DCE6DA;
+  --ink:#1E2A23;
+  --ink-2:#5B6B60;
+  --ink-3:#8B9A8F;
+  --green:#177245;
+  --green-dark:#0E5733;
+  --green-soft:#E5F1E9;
+  --orange:#D9660C;
+  --orange-soft:#FCEFDF;
+  --teal:#0F766E;
+  --teal-soft:#E1F1EE;
+  --red:#C0392B;
+  --red-soft:#F9E9E6;
+  --amber:#B45309;
+  --amber-soft:#FCF0DC;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(15,42,30,.05), 0 10px 26px -14px rgba(15,42,30,.22);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  background:var(--bg); color:var(--ink);
+  font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+#app{max-width:1080px;margin:0 auto;padding:18px 20px 60px}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+h1,h2,h3{margin:0;line-height:1.25}
+a{color:var(--green)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ============ 顶栏与品牌 ============ */
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:4px 0 14px}
+.brand{font-size:26px;font-weight:800;letter-spacing:.2px;color:var(--green-dark)}
+.brand-sub{color:var(--ink-2);font-size:13px;margin-top:3px}
+.topbar-right{display:flex;gap:8px;flex-shrink:0}
+.barcode{height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--green-dark) 0 14px,var(--green) 14px 18px,var(--green-soft) 18px 26px);margin-bottom:22px}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+
+/* ============ 按钮 ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;border-radius:11px;padding:10px 16px;font-size:15px;font-weight:600;transition:background .12s ease,transform .1s ease}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green-dark)}
+.btn-primary:disabled{opacity:.55;cursor:default}
+.btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--green);color:var(--green)}
+.btn-danger{background:var(--red-soft);color:var(--red)}
+.btn-danger:hover{background:#F3DCD8}
+.btn-sm{padding:7px 12px;font-size:13px;border-radius:9px}
+.link-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--ink-2);font-size:13px;padding:6px 8px;border-radius:8px}
+.link-btn:hover{color:var(--green);background:var(--green-soft)}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid var(--line);background:var(--surface);border-radius:9px;color:var(--ink-2)}
+.icon-btn:hover{color:var(--green);border-color:var(--green)}
+svg{display:block;flex-shrink:0}
+
+/* ============ 卡片 ============ */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-pad{padding:20px}
+
+/* ============ 首页模块卡 ============ */
+.home-main{margin-top:6px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.module-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;display:flex;flex-direction:column;gap:10px}
+.module-card:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(15,42,30,.06),0 18px 40px -18px rgba(15,42,30,.30)}
+.module-card:focus-visible{outline:3px solid var(--green-soft);outline-offset:2px}
+.mc-icon{width:54px;height:54px;border-radius:13px;display:grid;place-items:center}
+.mc-icon.green{background:var(--green-soft);color:var(--green)}
+.mc-icon.orange{background:var(--orange-soft);color:var(--orange)}
+.mc-icon.teal{background:var(--teal-soft);color:var(--teal)}
+.mc-title{font-size:20px;font-weight:800;color:var(--ink)}
+.mc-desc{color:var(--ink-2);font-size:14px;min-height:40px}
+.mc-stat{font-size:13px;color:var(--ink-3)}
+.mc-go{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-weight:600;font-size:14px}
+.home-foot{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.foot-note{font-size:12px;color:var(--ink-3)}
+
+/* ============ 工具栏 / 搜索 ============ */
+.toolbar{padding:14px 16px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px}
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-wrap svg{position:absolute;left:12px;color:var(--ink-3);pointer-events:none}
+.search-wrap input{width:100%;padding:11px 12px 11px 40px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:var(--surface);color:var(--ink)}
+.search-wrap input:focus{outline:2px solid var(--green-soft);border-color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:14px}
+.chip:hover{border-color:var(--green);color:var(--green)}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+.sort-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sort-row select{padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:14px;color:var(--ink)}
+.count{font-size:13px;color:var(--ink-3)}
+
+/* ============ 商品网格 ============ */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px}
+.prod-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;transition:transform .12s ease}
+.prod-card:hover{transform:translateY(-2px)}
+.prod-img{height:150px;background:var(--green-soft);display:grid;place-items:center;overflow:hidden}
+.prod-img img{width:100%;height:100%;object-fit:cover;display:block}
+.prod-img .ph{color:var(--ink-3);opacity:.7}
+.prod-body{padding:13px 14px 15px;display:flex;flex-direction:column;gap:7px;flex:1}
+.prod-name{font-weight:700;font-size:15px;line-height:1.35}
+.prod-cat{font-size:12px;color:var(--ink-3)}
+.prod-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}
+.price-tag{display:inline-flex;align-items:baseline;gap:3px;background:var(--orange-soft);color:var(--orange);font-weight:800;font-size:16px;padding:4px 10px;border-radius:8px}
+.price-tag .cur{font-size:11px;font-weight:600}
+.price-tag .unit{font-size:12px;font-weight:600;opacity:.75}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
+.b-ok{background:var(--green-soft);color:var(--green)}
+.b-no{background:var(--ink-3);color:#fff}
+.b-wait{background:var(--orange-soft);color:var(--orange)}
+.b-done{background:var(--green-soft);color:var(--green-dark)}
+
+/* ============ 空状态 ============ */
+.empty{padding:56px 20px;text-align:center;color:var(--ink-2)}
+.empty .e-ico{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;background:var(--green-soft);color:var(--green);display:grid;place-items:center}
+.empty h3{margin-bottom:6px;color:var(--ink);font-size:17px}
+.empty p{margin:0;font-size:14px}
+
+/* ============ 快递查询 ============ */
+.p-search{display:flex;flex-direction:column;gap:14px;padding:22px}
+.p-search h2{font-size:19px}
+.query-row{display:flex;gap:10px}
+.query-row .search-wrap{flex:1}
+.query-row .btn{flex-shrink:0}
+.p-result{padding:20px;margin-top:16px}
+.p-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.p-status-row .badge{font-size:14px;padding:6px 14px}
+.p-track{font-weight:800;font-size:17px}
+.dl{display:grid;grid-template-columns:110px 1fr;gap:9px 14px;font-size:14px}
+.dl dt{color:var(--ink-3)}
+.dl dd{margin:0;color:var(--ink);font-weight:600}
+.p-big-status{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800}
+
+/* ============ 汇率 ============ */
+.rates-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;margin-bottom:14px;flex-wrap:wrap}
+.rates-head h2{font-size:19px;margin-bottom:4px}
+.rates-meta{font-size:13px;color:var(--ink-2)}
+.rate-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;margin-bottom:10px;flex-wrap:wrap}
+.rate-code{display:flex;align-items:baseline;gap:9px}
+.rate-code .c{font-weight:800;font-size:17px}
+.rate-name{font-size:13px;color:var(--ink-3)}
+.rate-val{font-size:15px;color:var(--ink-2)}
+.rate-val .big{font-weight:800;color:var(--ink);font-size:18px}
+.hint-bar{margin:12px 0;padding:11px 14px;border-radius:11px;font-size:13px}
+.hint-amber{background:var(--amber-soft);color:var(--amber)}
+.hint-green{background:var(--green-soft);color:var(--green-dark)}
+.hint-red{background:var(--red-soft);color:var(--red)}
+.rates-note{margin-top:14px;font-size:12px;color:var(--ink-3);text-align:center}
+.conv-card{padding:18px 20px;margin-bottom:14px}
+.conv-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.conv-head h3{font-size:17px}
+.conv-note{font-size:12px;color:var(--ink-3)}
+.conv-status{font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.conv-status.ok{color:var(--green)}
+.conv-status.warn{color:var(--amber)}
+.conv-status.loading{color:var(--amber)}
+.conv-status.off{color:var(--red);font-weight:700}
+.conv-offline-card{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
+.conv-offnote{margin-top:10px;padding:9px 12px;border-radius:9px;background:var(--red-soft);color:var(--red);font-size:12px;font-weight:600}
+.conv-grid{display:grid;grid-template-columns:1fr 1fr auto 1fr;gap:12px;align-items:end}
+.conv-side label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+.conv-side input,.conv-side select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink)}
+.conv-side input:focus,.conv-side select:focus{outline:2px solid var(--green-soft);border-color:var(--green)}
+.conv-swap{align-self:end;margin-bottom:2px}
+.conv-result{margin-top:14px;padding:13px 15px;border-radius:11px;background:var(--green-soft);color:var(--green-dark)}
+.conv-line1{font-size:17px}
+.conv-line1 .dim{color:var(--ink-2);font-weight:600}
+.conv-line2{font-size:13px;opacity:.85;margin-top:3px}
+.conv-none{color:var(--ink-3);font-size:14px}
+.conv-hist-card{padding:16px 18px;margin-bottom:14px}
+.hist-empty{color:var(--ink-3);font-size:14px;padding:10px 2px}
+.hist-row{display:flex;align-items:center;gap:12px;padding:10px 2px;border-top:1px solid var(--line)}
+.hist-row:first-of-type{border-top:none}
+.hist-info{flex:1;min-width:0}
+.hist-main{font-size:15px;font-weight:700}
+.hist-main b{color:var(--green-dark)}
+.hist-sub{font-size:12px;color:var(--ink-3);margin-top:1px}
+.loading-bar{height:4px;border-radius:2px;background:var(--green-soft);overflow:hidden;margin-bottom:12px}
+.loading-bar::after{content:"";display:block;width:40%;height:100%;border-radius:2px;background:var(--green);animation:slide 1s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(300%)}}
+
+/* ============ 管理模式 ============ */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px;box-shadow:var(--shadow)}
+.tab{padding:9px 16px;border-radius:10px;border:none;background:transparent;color:var(--ink-2);font-size:14px;font-weight:600}
+.tab.on{background:var(--green);color:#fff}
+.tab:hover:not(.on){background:var(--green-soft);color:var(--green)}
+.admin-panel{padding:18px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.panel-head h3{font-size:17px}
+.prow{display:flex;align-items:center;gap:14px;padding:12px 4px;border-top:1px solid var(--line)}
+.prow:first-of-type{border-top:none}
+.prow-thumb{width:52px;height:52px;border-radius:10px;background:var(--green-soft);overflow:hidden;display:grid;place-items:center;flex-shrink:0}
+.prow-thumb img{width:100%;height:100%;object-fit:cover}
+.prow-thumb .ph{color:var(--ink-3);opacity:.7}
+.prow-info{flex:1;min-width:0}
+.prow-name{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.prow-sub{font-size:13px;color:var(--ink-2);margin-top:2px}
+.prow-ops{display:flex;gap:8px;flex-shrink:0}
+.admin-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.admin-stack{display:flex;flex-direction:column;gap:16px}
+@media (max-width:860px){.admin-grid2{grid-template-columns:1fr}}
+
+/* ============ 表单 ============ */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+.field input[type=text],.field input[type=number],.field input[type=password],.field select,.field input[type=datetime-local]{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink)
+}
+.field input:focus,.field select:focus{outline:2px solid var(--green-soft);border-color:var(--green)}
+.field .hint{font-size:12px;color:var(--ink-3);margin-top:4px}
+.radio-row{display:flex;gap:14px;padding-top:4px}
+.radio-row label{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:500;color:var(--ink);margin:0;cursor:pointer}
+.check-row{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);margin:4px 0}
+.check-row input{width:17px;height:17px;accent-color:var(--green)}
+.cur-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.cur-grid label{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--ink);cursor:pointer;padding:6px 8px;border:1px solid var(--line);border-radius:9px}
+.cur-grid label:has(input:checked){border-color:var(--green);background:var(--green-soft)}
+.cur-grid input{width:16px;height:16px;accent-color:var(--green)}
+.save-row{display:flex;justify-content:flex-end;padding:14px 18px;margin-top:16px}
+
+/* ============ 弹窗 ============ */
+.mask{position:fixed;inset:0;background:rgba(14,32,24,.45);display:grid;place-items:center;z-index:60;padding:20px}
+.modal{background:var(--surface);border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:24px;box-shadow:0 24px 60px -20px rgba(0,0,0,.35)}
+.modal h3{margin-bottom:16px;font-size:18px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.img-preview{max-width:140px;max-height:140px;border-radius:10px;border:1px solid var(--line);margin-bottom:10px;object-fit:cover}
+.modal-warn{background:var(--amber-soft);color:var(--amber);font-size:13px;border-radius:10px;padding:10px 14px;margin-bottom:14px}
+
+/* ============ Toast ============ */
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;z-index:99;box-shadow:0 10px 30px -8px rgba(0,0,0,.4);animation:rise .18s ease}
+@keyframes rise{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* ============ 响应式与无障碍 ============ */
+@media (max-width:640px){
+  #app{padding:14px 14px 50px}
+  .brand{font-size:22px}
+  .prod-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .prod-img{height:120px}
+  .query-row{flex-direction:column}
+  .query-row .btn{width:100%}
+  .prow{flex-wrap:wrap}
+  .prow-ops{width:100%;justify-content:flex-end}
+  .dl{grid-template-columns:92px 1fr}
+  .modal{padding:18px}
+  .conv-grid{grid-template-columns:1fr 1fr}
+  .conv-swap{justify-self:end}
+}
+:focus-visible{outline:3px solid var(--green-soft);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+<script>
+'use strict';
+/* =====================================================================
+   超市客户服务终端 · 单文件应用
+   本地运行，数据存 localStorage（刷新/关闭/重启不丢失）
+   模块：商品展示 / 快递查询 / 货币汇率 + 管理模式
+   ===================================================================== */
+
+/* ===== 图标（内联 SVG，统一风格） ===== */
+const ICONS = {
+  cart:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+  box:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>',
+  exchange:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg>',
+  search:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>',
+  back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  plus:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  trash:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
+  edit:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  check:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  refresh:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg>',
+  lock:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  tag:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1"/></svg>',
+  clock:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  shelf:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/></svg>',
+  arrow:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>',
+  globe:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>',
+  download:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>',
+  upload:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>',
+  info:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>',
+  banknote:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>'
+};
+
+/* ===== 货币信息 ===== */
+const CUR_ORDER = ['USD','EUR','GBP','JPY','CNY','HKD','TWD','KRW','SGD','MYR','THB','IDR','PHP','VND','INR','PKR','BDT','LKR','NPR','AED','SAR','QAR','KWD','BHD','OMR','TRY','RUB','CAD','AUD','NZD','CHF','SEK','NOK','DKK','ZAR','EGP','BRL','MXN','ILS'];
+const CURRENCIES = {
+  USD:{zh:'美元',en:'US Dollar'}, EUR:{zh:'欧元',en:'Euro'}, GBP:{zh:'英镑',en:'British Pound'},
+  JPY:{zh:'日元',en:'Japanese Yen'}, CNY:{zh:'人民币',en:'Chinese Yuan'}, HKD:{zh:'港币',en:'Hong Kong Dollar'},
+  TWD:{zh:'新台币',en:'New Taiwan Dollar'}, KRW:{zh:'韩元',en:'South Korean Won'}, SGD:{zh:'新加坡元',en:'Singapore Dollar'},
+  MYR:{zh:'马来西亚林吉特',en:'Malaysian Ringgit'}, THB:{zh:'泰铢',en:'Thai Baht'}, IDR:{zh:'印尼盾',en:'Indonesian Rupiah'},
+  PHP:{zh:'菲律宾比索',en:'Philippine Peso'}, VND:{zh:'越南盾',en:'Vietnamese Dong'}, INR:{zh:'印度卢比',en:'Indian Rupee'},
+  PKR:{zh:'巴基斯坦卢比',en:'Pakistani Rupee'}, BDT:{zh:'孟加拉塔卡',en:'Bangladeshi Taka'}, LKR:{zh:'斯里兰卡卢比',en:'Sri Lankan Rupee'},
+  NPR:{zh:'尼泊尔卢比',en:'Nepalese Rupee'}, AED:{zh:'阿联酋迪拉姆',en:'UAE Dirham'}, SAR:{zh:'沙特里亚尔',en:'Saudi Riyal'},
+  QAR:{zh:'卡塔尔里亚尔',en:'Qatari Riyal'}, KWD:{zh:'科威特第纳尔',en:'Kuwaiti Dinar'}, BHD:{zh:'巴林第纳尔',en:'Bahraini Dinar'},
+  OMR:{zh:'阿曼里亚尔',en:'Omani Rial'}, TRY:{zh:'土耳其里拉',en:'Turkish Lira'}, RUB:{zh:'俄罗斯卢布',en:'Russian Ruble'},
+  CAD:{zh:'加元',en:'Canadian Dollar'}, AUD:{zh:'澳元',en:'Australian Dollar'}, NZD:{zh:'新西兰元',en:'New Zealand Dollar'},
+  CHF:{zh:'瑞士法郎',en:'Swiss Franc'}, SEK:{zh:'瑞典克朗',en:'Swedish Krona'}, NOK:{zh:'挪威克朗',en:'Norwegian Krone'},
+  DKK:{zh:'丹麦克朗',en:'Danish Krone'}, ZAR:{zh:'南非兰特',en:'South African Rand'}, EGP:{zh:'埃及镑',en:'Egyptian Pound'},
+  BRL:{zh:'巴西雷亚尔',en:'Brazilian Real'}, MXN:{zh:'墨西哥比索',en:'Mexican Peso'}, ILS:{zh:'以色列新谢克尔',en:'Israeli New Shekel'}
+};
+function curName(code){ const c=CURRENCIES[code]; return c ? (lang==='zh'?c.zh:c.en) : code; }
+
+/* ===== 多语言文案 ===== */
+const I18N = {
+  zh:{
+    appTitle:'超市客户服务', appSub:'客户服务终端',
+    back:'返回', langSwitch:'EN', home:'首页',
+    adminMode:'管理模式', dataLocalNote:'数据仅保存在本机浏览器，不会上传',
+    openModule:'进入',
+    modProducts:'商品展示', modProductsDesc:'浏览店内商品，按分类查找、搜索名称、查看价格与库存',
+    modParcels:'快递查询', modParcelsDesc:'输入快递运单号，查询您的快递是否已被取走',
+    modRates:'货币汇率', modRatesDesc:'查看国际货币最新汇率，联网自动更新，离线可看上次数据',
+    statProducts:'件商品', statPending:'件待取',
+    ratesMeta:'汇率更新于',
+    productsTitle:'商品展示', searchPlaceholder:'搜索商品名称…', allCats:'全部',
+    sortDefault:'默认排序', sortPriceAsc:'价格从低到高', sortPriceDesc:'价格从高到低',
+    inStock:'有货', outOfStock:'缺货', noImage:'暂无图片',
+    emptyProductsTitle:'暂无商品', emptyProductsDesc:'店主可在首页底部「管理模式」中添加商品',
+    productsCount:'共 {n} 件商品',
+    parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
+    enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取走',
+    arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
+    notFoundTitle:'未找到该运单', notFoundDesc:'请核对运单号是否输入正确，或到服务台咨询工作人员。',
+    resultFound:'查询结果',
+    ratesTitle:'货币汇率', baseCurrency:'基准货币', lastUpdate:'更新于',
+    refreshNow:'刷新汇率', refreshing:'正在获取最新汇率…', updateOk:'汇率已更新',
+    updateFail:'获取失败，当前显示上次缓存数据', cachedHint:'当前显示最近一次成功获取的汇率',
+    disclaimer:'汇率仅供参考，实际交易请以银行或兑换机构为准', source:'数据来源',
+    ratesEmpty:'暂无汇率数据，请点击「刷新汇率」获取', ratesEmptyNote:'需要联网获取；无网络时无法更新',
+    converterTitle:'自定义换汇', fromLabel:'从（原币种）', toLabel:'换（目标币种）', amountLabel:'金额',
+    swap:'互换币种', convHint:'获取到汇率后即可换算', noRate:'该币种暂无汇率数据',
+    convNote:'按当前展示汇率换算，结果仅供参考',
+    convLoading:'正在联网获取最新汇率…',
+    convOffline:'未联网 · 非在线汇率',
+    convOfflineDesc:'以下换算结果基于未联网的缓存汇率，仅供参考；联网刷新后可获得最新汇率。',
+    convOnline:'已使用最新在线汇率', listCached:'列表为缓存数据，仅供参考',
+    historyTitle:'换算历史', saveRecord:'记录本次换算', noHistory:'暂无记录',
+    histClear:'清空记录', histSaved:'已记录', confirmClear:'确定清空所有换算记录吗？',
+    adminTitle:'管理模式', adminDesc:'本机维护入口，客户界面不显示',
+    loginTitle:'输入管理口令', loginBtn:'进入', wrongPassword:'口令不正确',
+    passPlaceholder:'请输入口令', defaultPassHint:'初始口令：123456（进入后可在「系统设置」中修改）',
+    cancel:'取消', confirm:'确定', save:'保存', delete:'删除', edit:'编辑', add:'新增', close:'关闭',
+    saved:'已保存', deleted:'已删除', storageError:'保存失败：本地存储空间不足，请删除部分商品图片后重试',
+    confirmDelete:'确定要删除吗？此操作不可恢复。',
+    tabProducts:'商品管理', tabParcels:'快递管理', tabRates:'汇率设置', tabSettings:'系统设置',
+    addProduct:'新增商品', editProduct:'编辑商品', nameZh:'名称（中文）', nameEn:'名称（英文）',
+    category:'分类', price:'价格', unit:'单位', unitPlaceholder:'如：500g / 个 / 瓶',
+    stock:'库存状态', image:'商品图片', chooseImage:'选择图片', removeImage:'移除图片',
+    requireName:'请填写商品名称', requirePrice:'请填写正确的价格',
+    addParcel:'登记快递', shelfNo:'货架号', shelfPlaceholder:'如：A-3',
+    arrival:'到店时间', quickAdd:'连续登记（登记后保留表单继续录入）', register:'登记',
+    parcelList:'快递列表', parcelCount:'共 {n} 件 · 待取 {p} 件',
+    filterAll:'全部', markPicked:'标记已取走', undoPick:'撤销标记', noParcels:'暂无快递记录',
+    requireTracking:'请填写运单号', dupTracking:'该运单号已登记', parcelAdded:'已登记', parcelUpdated:'已更新',
+    baseCurrencyLabel:'基准货币', baseCurrencyDesc:'汇率以该货币为基准展示（商品价格也以此货币显示）',
+    showCurrencies:'显示哪些货币', saveRates:'保存汇率设置', ratesSaved:'汇率设置已保存',
+    cachedAt:'最近一次成功获取：', ratesNote:'客户打开「货币汇率」页面时会自动联网刷新；无网络时显示最近一次数据。',
+    storeName:'超市名称', storeNameZh:'名称（中文）', storeNameEn:'名称（英文）',
+    adminPass:'管理口令', newPass:'新口令', confirmPass:'确认新口令', changePass:'修改口令',
+    passChanged:'口令已修改', passMismatch:'两次输入的口令不一致', passTooShort:'口令至少 4 位',
+    categories:'商品分类', addCategory:'添加分类', catZh:'分类名（中文）', catEn:'分类名（英文）',
+    catInUse:'该分类下还有商品，无法删除', catEmpty:'请填写分类名称',
+    backup:'数据备份', exportData:'导出备份', exportDesc:'把全部数据下载为 JSON 文件，可另存到U盘等位置，防止误删。',
+    importData:'导入备份', importDesc:'从备份文件恢复数据（会覆盖当前全部数据）。',
+    importSuccess:'数据已恢复', importFail:'备份文件格式不正确',
+    dataNote:'所有数据仅保存在这台电脑的浏览器中。清除浏览器数据、更换浏览器或电脑都会导致数据丢失，请定期导出备份。',
+    passChangedHint:'修改后请牢记新口令'
+  },
+  en:{
+    appTitle:'Supermarket Service', appSub:'Customer Service Terminal',
+    back:'Back', langSwitch:'中文', home:'Home',
+    adminMode:'Staff Mode', dataLocalNote:'Data is stored only in this browser, never uploaded',
+    openModule:'Open',
+    modProducts:'Products', modProductsDesc:'Browse in-store items: search, categories, prices and stock',
+    modParcels:'Parcel Pickup', modParcelsDesc:'Enter your tracking number to check if the parcel has been picked up',
+    modRates:'Exchange Rates', modRatesDesc:'Live international exchange rates, auto-updated online, cached for offline',
+    statProducts:'items', statPending:'waiting',
+    ratesMeta:'Rates updated',
+    productsTitle:'Products', searchPlaceholder:'Search product name…', allCats:'All',
+    sortDefault:'Default', sortPriceAsc:'Price: low to high', sortPriceDesc:'Price: high to low',
+    inStock:'In stock', outOfStock:'Out of stock', noImage:'No image',
+    emptyProductsTitle:'No products yet', emptyProductsDesc:'The owner can add products in "Staff Mode" at the bottom of the home page',
+    productsCount:'{n} items',
+    parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
+    enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
+    arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
+    notFoundTitle:'Tracking number not found', notFoundDesc:'Please check the number, or ask our staff at the service counter.',
+    resultFound:'Result',
+    ratesTitle:'Exchange Rates', baseCurrency:'Base currency', lastUpdate:'Updated',
+    refreshNow:'Refresh', refreshing:'Fetching latest rates…', updateOk:'Rates updated',
+    updateFail:'Fetch failed, showing last cached rates', cachedHint:'Showing the most recent successful fetch',
+    disclaimer:'Rates are for reference only; actual trading rates may vary', source:'Source',
+    ratesEmpty:'No rate data yet, tap "Refresh" to fetch', ratesEmptyNote:'Requires internet; cannot update offline',
+    converterTitle:'Currency Converter', fromLabel:'From', toLabel:'To', amountLabel:'Amount',
+    swap:'Swap', convHint:'Available once rates are loaded', noRate:'No rate for this currency',
+    convNote:'Converted at the rates shown above, for reference only',
+    convLoading:'Fetching latest rates online…',
+    convOffline:'Offline · Not live rates',
+    convOfflineDesc:'This conversion is based on cached (offline) rates, for reference only. Refresh online for the latest rates.',
+    convOnline:'Using latest online rates', listCached:'List shows cached data, for reference only',
+    historyTitle:'Conversion History', saveRecord:'Save this conversion', noHistory:'No records yet',
+    histClear:'Clear all', histSaved:'Recorded', confirmClear:'Clear all conversion records?',
+    adminTitle:'Staff Mode', adminDesc:'Local maintenance, hidden from customers',
+    loginTitle:'Enter staff password', loginBtn:'Enter', wrongPassword:'Incorrect password',
+    passPlaceholder:'Enter password', defaultPassHint:'Default password: 123456 (change it in "Settings")',
+    cancel:'Cancel', confirm:'OK', save:'Save', delete:'Delete', edit:'Edit', add:'Add', close:'Close',
+    saved:'Saved', deleted:'Deleted', storageError:'Save failed: local storage is full. Remove some product images and retry.',
+    confirmDelete:'Delete this item? This cannot be undone.',
+    tabProducts:'Products', tabParcels:'Parcels', tabRates:'Rates', tabSettings:'Settings',
+    addProduct:'Add product', editProduct:'Edit product', nameZh:'Name (Chinese)', nameEn:'Name (English)',
+    category:'Category', price:'Price', unit:'Unit', unitPlaceholder:'e.g. 500g / each / bottle',
+    stock:'Stock', image:'Product image', chooseImage:'Choose image', removeImage:'Remove image',
+    requireName:'Please enter a product name', requirePrice:'Please enter a valid price',
+    addParcel:'Register parcel', shelfNo:'Shelf', shelfPlaceholder:'e.g. A-3',
+    arrival:'Arrival time', quickAdd:'Keep form for next entry', register:'Register',
+    parcelList:'Parcel list', parcelCount:'{n} total · {p} waiting',
+    filterAll:'All', markPicked:'Mark picked up', undoPick:'Undo', noParcels:'No parcels yet',
+    requireTracking:'Please enter a tracking number', dupTracking:'This tracking number already exists', parcelAdded:'Registered', parcelUpdated:'Updated',
+    baseCurrencyLabel:'Base currency', baseCurrencyDesc:'Rates are shown in this currency (product prices use it too)',
+    showCurrencies:'Currencies to display', saveRates:'Save rate settings', ratesSaved:'Rate settings saved',
+    cachedAt:'Last successful fetch: ', ratesNote:'The Rates page auto-refreshes online; without internet it shows the last cached data.',
+    storeName:'Store name', storeNameZh:'Name (Chinese)', storeNameEn:'Name (English)',
+    adminPass:'Staff password', newPass:'New password', confirmPass:'Confirm new password', changePass:'Change password',
+    passChanged:'Password changed', passMismatch:'The two passwords do not match', passTooShort:'Password must be at least 4 characters',
+    categories:'Product categories', addCategory:'Add category', catZh:'Name (Chinese)', catEn:'Name (English)',
+    catInUse:'This category still has products, cannot delete', catEmpty:'Please enter a category name',
+    backup:'Backup', exportData:'Export backup', exportDesc:'Download all data as a JSON file. Keep a copy somewhere safe.',
+    importData:'Restore backup', importDesc:'Restore data from a backup file (overwrites all current data).',
+    importSuccess:'Data restored', importFail:'Invalid backup file',
+    dataNote:'All data lives only in this browser. Clearing browser data, switching browsers or computers will lose it. Export backups regularly.',
+    passChangedHint:'Remember your new password'
+  }
+};
+let lang = 'zh';
+function t(k){ const d = I18N[lang] || I18N.zh; return d[k] !== undefined ? d[k] : (I18N.zh[k] !== undefined ? I18N.zh[k] : k); }
+function fmtCount(s, vals){ return s.replace(/\{(\w+)\}/g, (m,k)=> (vals && vals[k]!==undefined) ? vals[k] : m); }
+
+/* ===== 本地存储与状态 ===== */
+const LS = {
+  get(k, def){ try{ const v = localStorage.getItem(k); return v===null ? def : JSON.parse(v); }catch(e){ return def; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+const KEYS = { settings:'sm_settings', products:'sm_products', parcels:'sm_parcels', rates:'sm_rates', convHistory:'sm_conv_history' };
+const S = { settings:null, products:[], parcels:[], rates:null, convHistory:[] };
+
+function defaultSettings(){
+  return {
+    lang:'zh',
+    adminPass:'123456',
+    baseCurrency:'PKR',
+    showCurrencies:['USD','EUR','GBP','JPY','CNY','AED','SAR','INR','CAD','AUD','CHF','SGD','MYR','THB','KRW'],
+    storeNameZh:'社区超市',
+    storeNameEn:'Community Supermarket',
+    categories:[
+      {id:'c1', zh:'蔬菜水果', en:'Fresh Produce'},
+      {id:'c2', zh:'粮油副食', en:'Groceries'},
+      {id:'c3', zh:'零食饮料', en:'Snacks & Drinks'},
+      {id:'c4', zh:'乳品烘焙', en:'Dairy & Bakery'},
+      {id:'c5', zh:'日用百货', en:'Daily Goods'}
+    ]
+  };
+}
+function load(){
+  S.settings = LS.get(KEYS.settings, null);
+  if(!S.settings || typeof S.settings !== 'object' || !Array.isArray(S.settings.categories)){ S.settings = defaultSettings(); LS.set(KEYS.settings, S.settings); }
+  S.products = LS.get(KEYS.products, []); if(!Array.isArray(S.products)) S.products=[];
+  S.parcels  = LS.get(KEYS.parcels, []);  if(!Array.isArray(S.parcels)) S.parcels=[];
+  S.rates    = LS.get(KEYS.rates, null);
+  S.convHistory = LS.get(KEYS.convHistory, []); if(!Array.isArray(S.convHistory)) S.convHistory=[];
+  lang = (S.settings.lang==='en') ? 'en' : 'zh';
+}
+function saveSettings(){ return LS.set(KEYS.settings, S.settings); }
+function saveProducts(){ return LS.set(KEYS.products, S.products); }
+function saveParcels(){ return LS.set(KEYS.parcels, S.parcels); }
+function saveRatesCache(){ return LS.set(KEYS.rates, S.rates); }
+function saveConvHistory(){ return LS.set(KEYS.convHistory, S.convHistory); }
+
+/* ===== 工具函数 ===== */
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function p2(n){ return String(n).padStart(2,'0'); }
+function fmtDT(iso){ if(!iso) return '—'; const d=new Date(iso); if(isNaN(d)) return '—'; return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes()); }
+function fmtMoney(n){ n = Number(n)||0; return n.toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtRate(n){ if(n>=100) return n.toLocaleString('en-US',{maximumFractionDigits:2}); if(n>=1) return n.toLocaleString('en-US',{maximumFractionDigits:3}); return n.toLocaleString('en-US',{maximumFractionDigits:4}); }
+function fmtConv(n){ n=Number(n)||0; const abs=Math.abs(n); const d = abs>=100?2 : abs>=1?3 : abs>=0.01?4 : 6; return n.toLocaleString('en-US',{minimumFractionDigits:d, maximumFractionDigits:d}); }
+function nowLocalInput(){ const d=new Date(); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes()); }
+function todayLine(){
+  const d=new Date();
+  if(lang==='zh'){ const w=['日','一','二','三','四','五','六'][d.getDay()]; return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 星期'+w; }
+  return d.toLocaleDateString('en-US',{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+}
+function pendingCount(){ return S.parcels.filter(p=>p.status==='pending').length; }
+function catName(id){ const c=S.settings.categories.find(x=>x.id===id); return c ? (lang==='zh'?c.zh:c.en) : '—'; }
+
+/* ===== 提示 / 弹窗 ===== */
+function toast(msg){
+  const el=document.createElement('div'); el.className='toast'; el.textContent=msg;
+  document.getElementById('toast-root').appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 2600);
+}
+function openModal(html){ document.getElementById('modal-root').innerHTML = '<div class="mask"><div class="modal">'+html+'</div></div>'; }
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+let confirmCb = null;
+function confirmDlg(msg, onOk){
+  confirmCb = onOk;
+  openModal(
+    '<h3>'+esc(t('confirmDelete'))+'</h3>'+
+    '<p style="color:var(--ink-2);margin:0">'+esc(msg)+'</p>'+
+    '<div class="modal-actions">'+
+      '<button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('cancel'))+'</button>'+
+      '<button class="btn btn-danger" data-action="confirm-ok">'+esc(t('delete'))+'</button>'+
+    '</div>'
+  );
+}
+
+/* ===== 图片压缩 ===== */
+let pendingImg = '';   // 正在编辑的商品图片(dataURL)
+function readImage(file, cb){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w=img.width, h=img.height, max=420;
+      if(w>max){ h=Math.round(h*max/w); w=max; }
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.72));
+    };
+    img.onerror = ()=>{ toast(lang==='zh'?'图片读取失败':'Image load failed'); };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ===== 汇率获取 ===== */
+const RATE_STATE = { loading:false, fresh:false, lastFail:0 };
+async function fetchRates(){
+  const base = S.settings.baseCurrency || 'PKR';
+  const url = 'https://open.er-api.com/v6/latest/' + encodeURIComponent(base);
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 12000);
+  try{
+    const res = await fetch(url, {signal:ctrl.signal});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(!data || data.result!=='success' || !data.rates) throw new Error('bad data');
+    S.rates = { base:base, rates:data.rates, updatedAt:new Date().toISOString() };
+    saveRatesCache();
+    RATE_STATE.fresh = true;
+    RATE_STATE.lastFail = 0;
+    return {ok:true};
+  }catch(err){
+    RATE_STATE.fresh = false;
+    RATE_STATE.lastFail = Date.now();
+    return {ok:false, err:String(err && err.message || err)};
+  }finally{
+    clearTimeout(timer);
+  }
+}
+async function doRefresh(manual){
+  if(RATE_STATE.loading) return;
+  RATE_STATE.loading = true;
+  render();
+  const r = await fetchRates();
+  RATE_STATE.loading = false;
+  if(r.ok){ if(manual) toast(t('updateOk')); }
+  else { toast(t('updateFail')); }
+  render();
+}
+
+/* ===== 自定义换汇 ===== */
+function convCodeList(){
+  const st = S.settings;
+  const set = new Set([st.baseCurrency || 'PKR', ...(st.showCurrencies || [])]);
+  const list = CUR_ORDER.filter(c=>set.has(c));
+  return list.length ? list : ['PKR','USD'];
+}
+function computeConvHtml(amount, from, to){
+  if(!S.rates || !S.rates.rates) return '<span class="conv-none">'+esc(t('convHint'))+'</span>';
+  const rf = S.rates.rates[from], rt = S.rates.rates[to];
+  if(rf===undefined || rt===undefined) return '<span class="conv-none">'+esc(t('noRate'))+'</span>';
+  const rate = rt/rf;
+  const conv = amount*rate;
+  return '<div class="conv-line1"><span class="dim">'+esc(fmtConv(amount))+' '+esc(from)+' =</span> <b>'+esc(fmtConv(conv))+' '+esc(to)+'</b></div>'+
+         '<div class="conv-line2">1 '+esc(from)+' = '+esc(fmtRate(rate))+' '+esc(to)+'</div>';
+}
+function updateConvResult(){
+  const el = document.getElementById('conv-result');
+  if(!el) return;
+  const amountEl = document.getElementById('cv-amount');
+  const fromEl = document.getElementById('cv-from');
+  const toEl = document.getElementById('cv-to');
+  if(!amountEl || !fromEl || !toEl) return;
+  CV.amount = amountEl.value;
+  CV.from = fromEl.value;
+  CV.to = toEl.value;
+  el.innerHTML = computeConvHtml(parseFloat(amountEl.value)||0, CV.from, CV.to);
+}
+function converterCard(){
+  const st = S.settings;
+  const base = st.baseCurrency || 'PKR';
+  const codes = convCodeList();
+  if(!CV.from || !codes.includes(CV.from)) CV.from = codes.includes('USD') ? 'USD' : codes[0];
+  if(!CV.to || !codes.includes(CV.to)) CV.to = base;
+  if(CV.from===CV.to && codes.length>1) CV.to = codes.find(c=>c!==CV.from) || base;
+  const opts = (sel)=>codes.map(c=>'<option value="'+esc(c)+'" '+(c===sel?'selected':'')+'>'+esc(c)+' - '+esc(curName(c))+'</option>').join('');
+  const cacheOk = S.rates && S.rates.base===base;
+  const fresh = cacheOk && RATE_STATE.fresh;
+  const disabled = cacheOk ? '' : 'disabled';
+  let statusNote, result;
+  const cardClass = (cacheOk && !fresh) ? ' conv-offline-card' : '';
+  if(!cacheOk){
+    statusNote = '<span class="conv-status warn">'+esc(RATE_STATE.loading?t('convLoading'):t('convHint'))+'</span>';
+    result = '<span class="conv-none">'+esc(RATE_STATE.loading?t('convLoading'):t('convHint'))+'</span>';
+  }else{
+    result = computeConvHtml(parseFloat(CV.amount)||0, CV.from, CV.to);
+    if(!fresh) result += '<div class="conv-offnote">'+esc(t('convOfflineDesc'))+'</div>';
+    if(RATE_STATE.loading){
+      statusNote = '<span class="conv-status loading">'+esc(t('convLoading'))+'</span>';
+    }else if(fresh){
+      statusNote = '<span class="conv-status ok">'+ICONS.check+' '+esc(t('convOnline'))+' · '+esc(t('lastUpdate'))+' <span class="num">'+esc(fmtDT(S.rates.updatedAt))+'</span></span>';
+    }else{
+      statusNote = '<span class="conv-status off">'+ICONS.info+' '+esc(t('convOffline'))+'</span>';
+    }
+  }
+  return '<div class="card conv-card'+cardClass+'">'+
+    '<div class="conv-head"><h3>'+esc(t('converterTitle'))+'</h3>'+statusNote+'</div>'+
+    '<div class="conv-grid">'+
+      '<div class="conv-side"><label>'+esc(t('amountLabel'))+'</label><input type="number" id="cv-amount" min="0" step="any" value="'+esc(CV.amount)+'" data-action="conv-amount" '+disabled+'></div>'+
+      '<div class="conv-side"><label>'+esc(t('fromLabel'))+'</label><select id="cv-from" data-action="conv-from" '+disabled+'>'+opts(CV.from)+'</select></div>'+
+      '<button class="icon-btn conv-swap" data-action="conv-swap" title="'+esc(t('swap'))+'" '+disabled+'>'+ICONS.exchange+'</button>'+
+      '<div class="conv-side"><label>'+esc(t('toLabel'))+'</label><select id="cv-to" data-action="conv-to" '+disabled+'>'+opts(CV.to)+'</select></div>'+
+    '</div>'+
+    '<div class="conv-result num" id="conv-result">'+result+'</div>'+
+    (cacheOk ? '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-ghost btn-sm" data-action="conv-save">'+ICONS.plus+esc(t('saveRecord'))+'</button></div>' : '')+
+  '</div>';
+}
+function historyCard(){
+  let inner;
+  if(!S.convHistory.length){
+    inner = '<div class="hist-empty">'+esc(t('noHistory'))+'</div>';
+  }else{
+    inner = S.convHistory.map(h=>{
+      return '<div class="hist-row">'+
+        '<div class="hist-info">'+
+          '<div class="hist-main num">'+esc(fmtConv(h.amount))+' '+esc(h.from)+' = <b>'+esc(fmtConv(h.result))+' '+esc(h.to)+'</b></div>'+
+          '<div class="hist-sub num">1 '+esc(h.from)+' = '+esc(fmtRate(h.rate))+' '+esc(h.to)+' · '+esc(fmtDT(h.time))+'</div>'+
+        '</div>'+
+        '<button class="icon-btn" data-action="conv-hist-del" data-id="'+esc(h.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
+      '</div>';
+    }).join('');
+  }
+  return '<div class="card conv-hist-card">'+
+    '<div class="conv-head"><h3>'+esc(t('historyTitle'))+'</h3>'+
+      (S.convHistory.length ? '<button class="btn btn-ghost btn-sm" data-action="conv-hist-clear">'+ICONS.trash+esc(t('histClear'))+'</button>' : '')+
+    '</div>'+
+    inner+
+  '</div>';
+}
+
+/* ===== 视图状态 ===== */
+const PS = { q:'', cat:'all', sort:'default' };   // 商品视图
+const PQ = { tracking:'', searched:false, result:null }; // 快递查询
+const PA = { filter:'all', q:'' };                 // 快递管理
+const CV = { amount:'100', from:'USD', to:'PKR' };  // 自定义换汇
+let ADMIN_OK = false;
+let FORM_PRODUCT_ID = null;
+
+/* ===== 路由 ===== */
+function route(){
+  const h = location.hash.replace(/^#\/?/, '');
+  const qi = h.indexOf('?');
+  const name = qi>=0 ? h.slice(0,qi) : h;
+  const params = qi>=0 ? new URLSearchParams(h.slice(qi+1)) : new URLSearchParams();
+  return { name: name || 'home', params };
+}
+function go(hash){ if(location.hash===hash){ render(); } else { location.hash = hash; } }
+
+/* ===== 页面渲染入口 ===== */
+function render(){
+  const r = route();
+  const app = document.getElementById('app');
+  document.title = t('appTitle');
+  let html='';
+  if(r.name==='admin' && !ADMIN_OK){
+    html = viewHome();
+    app.innerHTML = html;
+    openLogin();
+    return;
+  }
+  switch(r.name){
+    case 'products': html = viewProducts(); break;
+    case 'parcels':  html = viewParcels(); break;
+    case 'rates':    html = viewRates(); break;
+    case 'admin':    html = viewAdmin((r.params.get('tab')||'products')); break;
+    default:         html = viewHome();
+  }
+  app.innerHTML = html;
+  window.scrollTo(0,0);
+  afterRender(r);
+}
+function afterRender(r){
+  if(r.name==='rates') afterRatesView();
+}
+function afterRatesView(){
+  const baseOk = S.rates && S.rates.base===S.settings.baseCurrency;
+  const stale = !S.rates || !baseOk || (Date.now() - new Date(S.rates.updatedAt).getTime() > 30*60*1000);
+  if(!RATE_STATE.fresh || stale){
+    if(!RATE_STATE.loading && (!RATE_STATE.lastFail || Date.now()-RATE_STATE.lastFail > 60000)){
+      doRefresh(false);
+    }
+  }
+}
+
+/* ===== 顶栏（子页共用） ===== */
+function pageHead(title){
+  return '<header class="topbar">'+
+    '<div class="page-head" style="width:100%;margin:0">'+
+      '<div style="display:flex;align-items:center;gap:12px">'+
+        '<button class="icon-btn" data-action="back" aria-label="'+esc(t('back'))+'">'+ICONS.back+'</button>'+
+        '<h1 style="font-size:20px;font-weight:800;color:var(--green-dark)">'+esc(title)+'</h1>'+
+      '</div>'+
+      '<button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button>'+
+    '</div>'+
+  '</header><div class="barcode"></div>';
+}
+
+/* ===== 首页 ===== */
+function moduleCard(id, color, icon, title, desc, stat){
+  return '<div class="module-card" data-action="go" data-id="'+id+'" role="button" tabindex="0">'+
+    '<div class="mc-icon '+color+'">'+icon+'</div>'+
+    '<div class="mc-title">'+esc(title)+'</div>'+
+    '<div class="mc-desc">'+esc(desc)+'</div>'+
+    '<div class="mc-stat num">'+esc(stat)+'</div>'+
+    '<div class="mc-go">'+esc(t('openModule'))+ICONS.arrow+'</div>'+
+  '</div>';
+}
+function viewHome(){
+  const st = S.settings;
+  const storeName = lang==='zh' ? st.storeNameZh : st.storeNameEn;
+  let rateLine = t('ratesEmpty');
+  if(S.rates && S.rates.updatedAt){ rateLine = t('ratesMeta')+' '+fmtDT(S.rates.updatedAt); }
+  return '<header class="topbar">'+
+      '<div>'+
+        '<h1 class="brand">'+esc(storeName)+'</h1>'+
+        '<div class="brand-sub">'+esc(t('appSub'))+' · '+esc(todayLine())+'</div>'+
+      '</div>'+
+      '<div class="topbar-right"><button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button></div>'+
+    '</header>'+
+    '<div class="barcode"></div>'+
+    '<main class="home-main">'+
+      '<div class="home-grid">'+
+        moduleCard('products','green',ICONS.cart,t('modProducts'),t('modProductsDesc'),S.products.length+' '+t('statProducts'))+
+        moduleCard('parcels','orange',ICONS.box,t('modParcels'),t('modParcelsDesc'),pendingCount()+' '+t('statPending'))+
+        moduleCard('rates','teal',ICONS.banknote,t('modRates'),t('modRatesDesc'),rateLine)+
+      '</div>'+
+    '</main>'+
+    '<footer class="home-foot">'+
+      '<button class="link-btn" data-action="open-admin">'+ICONS.lock+esc(t('adminMode'))+'</button>'+
+      '<span class="foot-note">'+esc(t('dataLocalNote'))+'</span>'+
+    '</footer>';
+}
+
+/* ===== 商品展示 ===== */
+function viewProducts(){
+  let list = S.products.slice();
+  if(PS.cat && PS.cat!=='all') list = list.filter(p=>p.categoryId===PS.cat);
+  if(PS.q){ const q=PS.q.toLowerCase(); list = list.filter(p=>(p.nameZh||'').toLowerCase().includes(q)||(p.nameEn||'').toLowerCase().includes(q)); }
+  if(PS.sort==='priceAsc') list.sort((a,b)=>(a.price||0)-(b.price||0));
+  else if(PS.sort==='priceDesc') list.sort((a,b)=>(b.price||0)-(a.price||0));
+  const chips = '<button class="chip '+(PS.cat==='all'?'on':'')+'" data-action="prod-cat" data-id="all">'+esc(t('allCats'))+'</button>'+
+    S.settings.categories.map(c=>'<button class="chip '+(PS.cat===c.id?'on':'')+'" data-action="prod-cat" data-id="'+esc(c.id)+'">'+esc(lang==='zh'?c.zh:c.en)+'</button>').join('');
+  const sortOpts = [['default',t('sortDefault')],['priceAsc',t('sortPriceAsc')],['priceDesc',t('sortPriceDesc')]]
+    .map(o=>'<option value="'+o[0]+'" '+(PS.sort===o[0]?'selected':'')+'>'+esc(o[1])+'</option>').join('');
+  const cur = S.settings.baseCurrency || 'PKR';
+  let grid;
+  if(!list.length){
+    grid = '<div class="empty"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('emptyProductsTitle'))+'</h3><p>'+esc(t('emptyProductsDesc'))+'</p></div>';
+  }else{
+    grid = '<div class="prod-grid">'+list.map(p=>{
+      const name = lang==='zh' ? (p.nameZh||p.nameEn) : (p.nameEn||p.nameZh);
+      const img = p.img ? '<img src="'+esc(p.img)+'" alt="">' : '<span class="ph">'+ICONS.tag+'</span>';
+      return '<div class="prod-card">'+
+        '<div class="prod-img">'+img+'</div>'+
+        '<div class="prod-body">'+
+          '<div class="prod-name">'+esc(name)+'</div>'+
+          '<div class="prod-cat">'+esc(catName(p.categoryId))+'</div>'+
+          '<div class="prod-bottom">'+
+            '<span class="price-tag num"><span class="cur">'+esc(cur)+'</span>'+esc(fmtMoney(p.price))+'<span class="unit">/'+esc(p.unit||'')+'</span></span>'+
+            '<span class="badge '+(p.inStock?'b-ok':'b-no')+'">'+esc(t(p.inStock?'inStock':'outOfStock'))+'</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }).join('')+'</div>';
+  }
+  return pageHead(t('productsTitle'))+
+    '<div class="toolbar card">'+
+      '<div class="search-wrap">'+ICONS.search+'<input id="prod-search" data-action="prod-search" data-enter="prod-search" placeholder="'+esc(t('searchPlaceholder'))+'" value="'+esc(PS.q)+'"></div>'+
+      '<div class="chips">'+chips+'</div>'+
+      '<div class="sort-row">'+
+        '<select data-action="prod-sort">'+sortOpts+'</select>'+
+        '<span class="count num">'+esc(fmtCount(t('productsCount'),{n:list.length}))+'</span>'+
+      '</div>'+
+    '</div>'+
+    grid;
+}
+
+/* ===== 快递查询 ===== */
+function viewParcels(){
+  let resultHtml = '';
+  if(PQ.searched){
+    const p = PQ.result;
+    if(p){
+      const statusBadge = p.status==='picked'
+        ? '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>'
+        : '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
+      resultHtml = '<div class="card p-result">'+
+        '<div class="p-status-row">'+
+          '<div class="p-big-status">'+ICONS.box+statusBadge+'</div>'+
+        '</div>'+
+        '<div class="dl">'+
+          '<dt>'+esc(t('trackingNo'))+'</dt><dd class="num">'+esc(p.trackingNo)+'</dd>'+
+          '<dt>'+ICONS.shelf+' '+esc(t('shelf'))+'</dt><dd>'+esc(p.shelf||'—')+'</dd>'+
+          '<dt>'+ICONS.clock+' '+esc(t('arrivalTime'))+'</dt><dd class="num">'+esc(fmtDT(p.arrivalTime))+'</dd>'+
+          '<dt>'+ICONS.check+' '+esc(t('pickTime'))+'</dt><dd class="num">'+(p.pickTime?esc(fmtDT(p.pickTime)):'—')+'</dd>'+
+        '</div>'+
+      '</div>';
+    }else{
+      resultHtml = '<div class="card p-result"><div class="empty" style="padding:26px 10px">'+
+        '<div class="e-ico">'+ICONS.search+'</div><h3>'+esc(t('notFoundTitle'))+'</h3><p>'+esc(t('notFoundDesc'))+'</p>'+
+      '</div></div>';
+    }
+  }
+  return pageHead(t('parcelsTitle'))+
+    '<div class="card p-search">'+
+      '<h2>'+esc(t('parcelsTitle'))+'</h2>'+
+      '<div class="query-row">'+
+        '<div class="search-wrap">'+ICONS.search+'<input id="p-tracking" data-action="parcel-query" data-enter="parcel-query" placeholder="'+esc(t('trackingPlaceholder'))+'" value="'+esc(PQ.tracking)+'"></div>'+
+        '<button class="btn btn-primary" data-action="parcel-query">'+ICONS.search+esc(t('checkBtn'))+'</button>'+
+      '</div>'+
+    '</div>'+
+    resultHtml;
+}
+
+/* ===== 货币汇率 ===== */
+function viewRates(){
+  const st = S.settings;
+  const base = st.baseCurrency || 'PKR';
+  const cacheOk = S.rates && S.rates.base===base;
+  let body='';
+  if(RATE_STATE.loading){
+    body += '<div class="loading-bar"></div><div class="hint-bar hint-green">'+esc(t('refreshing'))+'</div>';
+  }
+  if(!cacheOk){
+    body += '<div class="card card-pad empty" style="padding:40px 20px">'+
+      '<div class="e-ico">'+ICONS.banknote+'</div><h3>'+esc(t('ratesEmpty'))+'</h3><p>'+esc(t('ratesEmptyNote'))+'</p>'+
+      '<div style="margin-top:14px"><button class="btn btn-primary" data-action="rates-refresh">'+ICONS.refresh+esc(t('refreshNow'))+'</button></div>'+
+    '</div>';
+  }else{
+    const codes = st.showCurrencies.filter(c=>c!==base);
+    const rows = codes.map(c=>{
+      const raw = S.rates.rates[c];
+      const v = (raw===undefined||raw===null||raw===0) ? undefined : 1/raw;
+      const val = (v===undefined) ? '<span style="color:var(--ink-3)">—</span>' : '<span class="big num">'+esc(fmtRate(v))+'</span>';
+      return '<div class="rate-row card">'+
+        '<div class="rate-code"><span class="c num">'+esc(c)+'</span><span class="rate-name">'+esc(curName(c))+'</span></div>'+
+        '<div class="rate-val num">1 '+esc(c)+' = '+val+' '+esc(base)+'</div>'+
+      '</div>';
+    }).join('');
+    body += rows || '<div class="empty"><h3>'+esc(t('ratesEmpty'))+'</h3></div>';
+    if(S.rates.updatedAt){
+      const online = RATE_STATE.fresh;
+      body += '<div class="hint-bar '+(online?'hint-green':'hint-red')+'">'+
+        (online ? ICONS.check+' ' : '')+esc(t('lastUpdate'))+'：<span class="num">'+esc(fmtDT(S.rates.updatedAt))+'</span>'+
+        (online ? ' · '+esc(t('convOnline')) : ' · '+esc(t('convOffline')))+
+      '</div>';
+    }
+  }
+  return pageHead(t('ratesTitle'))+
+    '<div class="rates-head card">'+
+      '<div>'+
+        '<h2>'+esc(t('ratesTitle'))+'</h2>'+
+        '<div class="rates-meta">'+esc(t('baseCurrency'))+'：<b>'+esc(base)+'</b> '+esc(curName(base))+'</div>'+
+      '</div>'+
+      '<button class="btn btn-primary" data-action="rates-refresh" '+(RATE_STATE.loading?'disabled':'')+'>'+ICONS.refresh+esc(t('refreshNow'))+'</button>'+
+    '</div>'+
+    converterCard()+
+    historyCard()+
+    body+
+    '<div class="rates-note">'+esc(t('disclaimer'))+' · '+esc(t('source'))+'：open.er-api.com</div>';
+}
+
+/* ===== 管理模式 ===== */
+function viewAdmin(tab){
+  const tabs = [['products',t('tabProducts')],['parcels',t('tabParcels')],['rates',t('tabRates')],['settings',t('tabSettings')]]
+    .map(x=>'<button class="tab '+(tab===x[0]?'on':'')+'" data-action="admin-tab" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
+  let body='';
+  if(tab==='products') body = adminProducts();
+  else if(tab==='parcels') body = adminParcels();
+  else if(tab==='rates') body = adminRates();
+  else body = adminSettings();
+  return pageHead(t('adminTitle'))+
+    '<div class="tabs">'+tabs+'</div>'+
+    '<div class="admin-stack">'+body+'</div>';
+}
+
+/* —— 商品管理 —— */
+function adminProducts(){
+  const cur = S.settings.baseCurrency || 'PKR';
+  let rows;
+  if(!S.products.length){
+    rows = '<div class="empty" style="padding:34px 12px"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('emptyProductsTitle'))+'</h3><p>'+esc(t('emptyProductsDesc'))+'</p></div>';
+  }else{
+    rows = S.products.map(p=>{
+      const nameZh = p.nameZh||'', nameEn = p.nameEn||'';
+      const nameLine = lang==='zh' ? (nameZh+(nameEn?' · '+nameEn:'')) : (nameEn+(nameZh?' · '+nameZh:''));
+      const img = p.img ? '<img src="'+esc(p.img)+'" alt="">' : '<span class="ph">'+ICONS.tag+'</span>';
+      return '<div class="prow">'+
+        '<div class="prow-thumb">'+img+'</div>'+
+        '<div class="prow-info">'+
+          '<div class="prow-name">'+esc(nameLine)+' <span class="badge '+(p.inStock?'b-ok':'b-no')+'">'+esc(t(p.inStock?'inStock':'outOfStock'))+'</span></div>'+
+          '<div class="prow-sub num">'+esc(catName(p.categoryId))+' · '+esc(cur)+' '+esc(fmtMoney(p.price))+(p.unit?' / '+esc(p.unit):'')+'</div>'+
+        '</div>'+
+        '<div class="prow-ops">'+
+          '<button class="icon-btn" data-action="product-edit" data-id="'+esc(p.id)+'" title="'+esc(t('edit'))+'">'+ICONS.edit+'</button>'+
+          '<button class="icon-btn" data-action="product-del" data-id="'+esc(p.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+  return '<div class="card admin-panel">'+
+    '<div class="panel-head"><h3>'+esc(t('tabProducts'))+'</h3><button class="btn btn-primary btn-sm" data-action="product-new">'+ICONS.plus+esc(t('addProduct'))+'</button></div>'+
+    rows+
+  '</div>';
+}
+
+function openProductForm(id){
+  const p = id ? S.products.find(x=>x.id===id) : null;
+  FORM_PRODUCT_ID = id || null;
+  pendingImg = p ? (p.img||'') : '';
+  const catOpts = S.settings.categories.map(c=>'<option value="'+esc(c.id)+'" '+(p&&p.categoryId===c.id?'selected':'')+'>'+esc(lang==='zh'?c.zh:c.en)+'</option>').join('');
+  const prev = pendingImg ? '<img id="pi-prev" class="img-preview" src="'+esc(pendingImg)+'" alt="">' : '<img id="pi-prev" class="img-preview" style="display:none" alt="">';
+  openModal(
+    '<h3>'+esc(p?t('editProduct'):t('addProduct'))+'</h3>'+
+    '<input type="file" id="pi-file" accept="image/*" style="display:none">'+
+    '<div class="field"><label>'+esc(t('nameZh'))+' *</label><input type="text" id="pi-zh" value="'+esc(p?(p.nameZh||''):'')+'" data-enter="product-save"></div>'+
+    '<div class="field"><label>'+esc(t('nameEn'))+'</label><input type="text" id="pi-en" value="'+esc(p?(p.nameEn||''):'')+'" data-enter="product-save"></div>'+
+    '<div class="field"><label>'+esc(t('category'))+'</label><select id="pi-cat">'+catOpts+'</select></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+      '<div class="field"><label>'+esc(t('price'))+' *</label><input type="number" id="pi-price" min="0" step="0.01" value="'+esc(p?p.price:'')+'" data-enter="product-save"></div>'+
+      '<div class="field"><label>'+esc(t('unit'))+'</label><input type="text" id="pi-unit" placeholder="'+esc(t('unitPlaceholder'))+'" value="'+esc(p?(p.unit||''):'')+'" data-enter="product-save"></div>'+
+    '</div>'+
+    '<div class="field"><label>'+esc(t('stock'))+'</label><div class="radio-row">'+
+      '<label><input type="radio" name="pi-stock" value="1" '+(p&&!p.inStock?'':'checked')+'>'+esc(t('inStock'))+'</label>'+
+      '<label><input type="radio" name="pi-stock" value="0" '+(p&&!p.inStock?'checked':'')+'>'+esc(t('outOfStock'))+'</label>'+
+    '</div></div>'+
+    '<div class="field"><label>'+esc(t('image'))+'</label>'+prev+
+      '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-ghost btn-sm" data-action="prod-img-pick">'+ICONS.upload+esc(t('chooseImage'))+'</button>'+
+        '<button class="btn btn-ghost btn-sm" data-action="prod-img-clear" '+(pendingImg?'':'style="display:none"')+'>'+esc(t('removeImage'))+'</button>'+
+      '</div>'+
+      '<div class="hint">'+esc(lang==='zh'?'图片会压缩后存入本机浏览器，建议不超过 400px 宽度':'Images are compressed and stored in this browser')+'</div>'+
+    '</div>'+
+    '<div class="modal-actions">'+
+      '<button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('cancel'))+'</button>'+
+      '<button class="btn btn-primary" data-action="product-save">'+esc(t('save'))+'</button>'+
+    '</div>'
+  );
+}
+function saveProductFromForm(){
+  const zh = document.getElementById('pi-zh').value.trim();
+  const en = document.getElementById('pi-en').value.trim();
+  const cat = document.getElementById('pi-cat').value;
+  const price = parseFloat(document.getElementById('pi-price').value);
+  const unit = document.getElementById('pi-unit').value.trim();
+  const inStock = document.querySelector('input[name="pi-stock"]:checked').value === '1';
+  if(!zh && !en){ toast(t('requireName')); return; }
+  if(isNaN(price) || price<0){ toast(t('requirePrice')); return; }
+  if(FORM_PRODUCT_ID){
+    const p = S.products.find(x=>x.id===FORM_PRODUCT_ID);
+    if(p){ p.nameZh=zh; p.nameEn=en; p.categoryId=cat; p.price=price; p.unit=unit; p.inStock=inStock; p.img=pendingImg; }
+  }else{
+    S.products.push({id:uid(), nameZh:zh, nameEn:en, categoryId:cat, price:price, unit:unit, inStock:inStock, img:pendingImg});
+  }
+  if(!saveProducts()){ toast(t('storageError')); return; }
+  closeModal();
+  render();
+  toast(t('saved'));
+}
+
+/* —— 快递管理 —— */
+function adminParcels(){
+  const list = S.parcels.slice();
+  const filtered = list.filter(p=>{
+    if(PA.filter==='pending' && p.status!=='pending') return false;
+    if(PA.filter==='picked' && p.status!=='picked') return false;
+    if(PA.q && !p.trackingNo.toLowerCase().includes(PA.q.toLowerCase())) return false;
+    return true;
+  }).sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  const curTime = nowLocalInput();
+  let rows;
+  if(!filtered.length){
+    rows = '<div class="empty" style="padding:30px 12px"><div class="e-ico">'+ICONS.box+'</div><h3>'+esc(t('noParcels'))+'</h3></div>';
+  }else{
+    rows = filtered.map(p=>{
+      const statusBadge = p.status==='picked' ? '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>' : '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
+      let sub = esc(t('shelf'))+'：'+(p.shelf?esc(p.shelf):'—')+' · '+esc(t('arrivalTime'))+'：<span class="num">'+esc(fmtDT(p.arrivalTime))+'</span>';
+      if(p.pickTime) sub += ' · '+esc(t('pickTime'))+'：<span class="num">'+esc(fmtDT(p.pickTime))+'</span>';
+      return '<div class="prow">'+
+        '<div class="prow-info">'+
+          '<div class="prow-name num">'+esc(p.trackingNo)+' '+statusBadge+'</div>'+
+          '<div class="prow-sub">'+sub+'</div>'+
+        '</div>'+
+        '<div class="prow-ops">'+
+          (p.status==='pending'
+            ? '<button class="btn btn-primary btn-sm" data-action="parcel-pick" data-id="'+esc(p.id)+'">'+ICONS.check+esc(t('markPicked'))+'</button>'
+            : '<button class="btn btn-ghost btn-sm" data-action="parcel-undo" data-id="'+esc(p.id)+'">'+esc(t('undoPick'))+'</button>')+
+          '<button class="icon-btn" data-action="parcel-del" data-id="'+esc(p.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+  const filters = [['all',t('filterAll')],['pending',t('statusPending')],['picked',t('statusPicked')]]
+    .map(x=>'<button class="chip '+(PA.filter===x[0]?'on':'')+'" data-action="parcel-filter" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
+  return '<div class="admin-grid2">'+
+    '<div class="card card-pad">'+
+      '<h3 style="margin-bottom:14px">'+esc(t('addParcel'))+'</h3>'+
+      '<div class="field"><label>'+esc(t('trackingNo'))+' *</label><input type="text" id="pa-no" placeholder="'+esc(t('trackingPlaceholder'))+'" data-enter="parcel-add"></div>'+
+      '<div class="field"><label>'+esc(t('shelfNo'))+'</label><input type="text" id="pa-shelf" placeholder="'+esc(t('shelfPlaceholder'))+'" data-enter="parcel-add"></div>'+
+      '<div class="field"><label>'+esc(t('arrival'))+'</label><input type="datetime-local" id="pa-time" value="'+esc(curTime)+'"></div>'+
+      '<label class="check-row"><input type="checkbox" id="pa-quick">'+esc(t('quickAdd'))+'</label>'+
+      '<div style="margin-top:10px"><button class="btn btn-primary" data-action="parcel-add">'+ICONS.plus+esc(t('register'))+'</button></div>'+
+    '</div>'+
+    '<div class="card admin-panel">'+
+      '<div class="panel-head"><h3>'+esc(t('parcelList'))+'</h3><span class="count num">'+esc(fmtCount(t('parcelCount'),{n:S.parcels.length,p:pendingCount()}))+'</span></div>'+
+      '<div class="chips" style="margin-bottom:10px">'+filters+'</div>'+
+      '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-action="parcel-search" data-enter="parcel-search" placeholder="'+esc(t('searchPlaceholder'))+'" value="'+esc(PA.q)+'"></div>'+
+      rows+
+    '</div>'+
+  '</div>';
+}
+function addParcelFromForm(){
+  const no = document.getElementById('pa-no').value.replace(/\s+/g,'').toUpperCase();
+  const shelf = document.getElementById('pa-shelf').value.trim();
+  const timeVal = document.getElementById('pa-time').value;
+  const quick = document.getElementById('pa-quick').checked;
+  if(!no){ toast(t('requireTracking')); return; }
+  if(S.parcels.some(p=>p.trackingNo.toUpperCase()===no)){ toast(t('dupTracking')); return; }
+  const arrivalTime = timeVal ? new Date(timeVal).toISOString() : new Date().toISOString();
+  S.parcels.push({id:uid(), trackingNo:no, shelf:shelf, arrivalTime:arrivalTime, status:'pending', pickTime:null});
+  if(!saveParcels()){ toast(t('storageError')); return; }
+  if(quick){ document.getElementById('pa-no').value=''; }
+  else{ document.getElementById('pa-no').value=''; document.getElementById('pa-shelf').value=''; }
+  render();
+  toast(t('parcelAdded'));
+}
+
+/* —— 汇率设置 —— */
+function adminRates(){
+  const st = S.settings;
+  const baseOpts = CUR_ORDER.map(c=>'<option value="'+esc(c)+'" '+(st.baseCurrency===c?'selected':'')+'>'+esc(c)+' - '+esc(curName(c))+'</option>').join('');
+  const curChecks = CUR_ORDER.map(c=>{
+    const on = st.showCurrencies.includes(c);
+    return '<label><input type="checkbox" class="rt-cur" value="'+esc(c)+'" '+(on?'checked':'')+'>'+esc(c)+' <span style="color:var(--ink-3);font-size:12px">'+esc(curName(c))+'</span></label>';
+  }).join('');
+  const cachedLine = (S.rates && S.rates.updatedAt) ? '<div class="hint-bar hint-green">'+esc(t('cachedAt'))+'<span class="num">'+esc(fmtDT(S.rates.updatedAt))+'</span></div>' : '';
+  return '<div class="admin-grid2">'+
+    '<div class="card card-pad">'+
+      '<h3 style="margin-bottom:10px">'+esc(t('baseCurrencyLabel'))+'</h3>'+
+      '<select id="rt-base">'+baseOpts+'</select>'+
+      '<div class="hint" style="font-size:12px;color:var(--ink-3);margin-top:6px">'+esc(t('baseCurrencyDesc'))+'</div>'+
+    '</div>'+
+    '<div class="card card-pad">'+
+      '<h3 style="margin-bottom:10px">'+esc(t('showCurrencies'))+'</h3>'+
+      '<div class="cur-grid">'+curChecks+'</div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="card save-row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'+
+    '<button class="btn btn-primary" data-action="rates-save">'+esc(t('saveRates'))+'</button>'+
+    '<button class="btn btn-ghost" data-action="rates-refresh">'+ICONS.refresh+esc(t('refreshNow'))+'</button>'+
+  '</div>'+
+  '<div class="card card-pad">'+cachedLine+'<div class="hint" style="font-size:12px;color:var(--ink-3)">'+esc(t('ratesNote'))+'</div></div>';
+}
+function saveRatesFromForm(){
+  const base = document.getElementById('rt-base').value;
+  const checked = Array.from(document.querySelectorAll('.rt-cur:checked')).map(x=>x.value);
+  S.settings.baseCurrency = base;
+  S.settings.showCurrencies = checked.length ? checked : [base==='PKR'?'USD':'PKR'];
+  saveSettings();
+  render();
+  toast(t('ratesSaved'));
+}
+
+/* —— 系统设置 —— */
+function adminSettings(){
+  const st = S.settings;
+  const catRows = st.categories.map(c=>
+    '<div class="prow">'+
+      '<div style="display:flex;gap:8px;flex:1;flex-wrap:wrap">'+
+        '<input type="text" id="cat-zh-'+esc(c.id)+'" value="'+esc(c.zh)+'" style="flex:1;min-width:110px;padding:8px 10px;border:1px solid var(--line);border-radius:9px" placeholder="'+esc(t('catZh'))+'">'+
+        '<input type="text" id="cat-en-'+esc(c.id)+'" value="'+esc(c.en)+'" style="flex:1;min-width:110px;padding:8px 10px;border:1px solid var(--line);border-radius:9px" placeholder="'+esc(t('catEn'))+'">'+
+      '</div>'+
+      '<div class="prow-ops">'+
+        '<button class="icon-btn" data-action="cat-save" data-id="'+esc(c.id)+'" title="'+esc(t('save'))+'">'+ICONS.check+'</button>'+
+        '<button class="icon-btn" data-action="cat-del" data-id="'+esc(c.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
+      '</div>'+
+    '</div>').join('');
+  return '<div class="admin-grid2">'+
+    '<div class="card card-pad">'+
+      '<h3 style="margin-bottom:12px">'+esc(t('storeName'))+'</h3>'+
+      '<div class="field"><label>'+esc(t('storeNameZh'))+'</label><input type="text" id="st-name-zh" value="'+esc(st.storeNameZh)+'"></div>'+
+      '<div class="field"><label>'+esc(t('storeNameEn'))+'</label><input type="text" id="st-name-en" value="'+esc(st.storeNameEn)+'"></div>'+
+      '<button class="btn btn-primary" data-action="settings-store-save">'+esc(t('save'))+'</button>'+
+    '</div>'+
+    '<div class="card card-pad">'+
+      '<h3 style="margin-bottom:12px">'+esc(t('adminPass'))+'</h3>'+
+      '<div class="field"><label>'+esc(t('newPass'))+'</label><input type="password" id="st-pass1" data-enter="settings-pass-save"></div>'+
+      '<div class="field"><label>'+esc(t('confirmPass'))+'</label><input type="password" id="st-pass2" data-enter="settings-pass-save"></div>'+
+      '<button class="btn btn-primary" data-action="settings-pass-save">'+esc(t('changePass'))+'</button>'+
+      '<div class="hint" style="font-size:12px;color:var(--ink-3);margin-top:8px">'+esc(t('passChangedHint'))+'</div>'+
+    '</div>'+
+    '<div class="card card-pad">'+
+      '<h3 style="margin-bottom:12px">'+esc(t('categories'))+'</h3>'+
+      catRows+
+      '<div class="prow" style="border-top:1px solid var(--line);margin-top:4px">'+
+        '<div style="display:flex;gap:8px;flex:1;flex-wrap:wrap">'+
+          '<input type="text" id="cat-new-zh" style="flex:1;min-width:110px;padding:8px 10px;border:1px solid var(--line);border-radius:9px" placeholder="'+esc(t('catZh'))+'">'+
+          '<input type="text" id="cat-new-en" style="flex:1;min-width:110px;padding:8px 10px;border:1px solid var(--line);border-radius:9px" placeholder="'+esc(t('catEn'))+'">'+
+        '</div>'+
+        '<button class="btn btn-primary btn-sm" data-action="cat-add">'+ICONS.plus+esc(t('addCategory'))+'</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="card card-pad">'+
+      '<h3 style="margin-bottom:12px">'+esc(t('backup'))+'</h3>'+
+      '<input type="file" id="imp-file" accept="application/json,.json" style="display:none">'+
+      '<div class="field"><label>'+esc(t('exportData'))+'</label>'+
+        '<p style="font-size:13px;color:var(--ink-2);margin:2px 0 10px">'+esc(t('exportDesc'))+'</p>'+
+        '<button class="btn btn-ghost" data-action="backup-export">'+ICONS.download+esc(t('exportData'))+'</button>'+
+      '</div>'+
+      '<div class="field"><label>'+esc(t('importData'))+'</label>'+
+        '<p style="font-size:13px;color:var(--ink-2);margin:2px 0 10px">'+esc(t('importDesc'))+'</p>'+
+        '<button class="btn btn-ghost" data-action="backup-import">'+ICONS.upload+esc(t('importData'))+'</button>'+
+      '</div>'+
+      '<div class="modal-warn" style="margin-bottom:0">'+esc(t('dataNote'))+'</div>'+
+    '</div>'+
+  '</div>';
+}
+
+/* ===== 登录弹窗 ===== */
+function openLogin(){
+  const hint = (S.settings.adminPass==='123456') ? '<div class="modal-warn">'+esc(t('defaultPassHint'))+'</div>' : '';
+  openModal(
+    '<h3>'+esc(t('loginTitle'))+'</h3>'+hint+
+    '<div class="field"><input type="password" id="login-pass" placeholder="'+esc(t('passPlaceholder'))+'" data-enter="login-submit"></div>'+
+    '<div class="modal-actions">'+
+      '<button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('cancel'))+'</button>'+
+      '<button class="btn btn-primary" data-action="login-submit">'+esc(t('loginBtn'))+'</button>'+
+    '</div>'
+  );
+  setTimeout(()=>{ const el=document.getElementById('login-pass'); if(el) el.focus(); }, 30);
+}
+
+/* ===== 备份 ===== */
+function exportData(){
+  const data = { app:'supermarket-customer-service', version:1, exportedAt:new Date().toISOString(),
+    settings:S.settings, products:S.products, parcels:S.parcels, rates:S.rates, convHistory:S.convHistory };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const d=new Date(); a.download = 'supermarket-backup-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+  toast(t('saved'));
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || typeof data!=='object' || !data.settings || !Array.isArray(data.products) || !Array.isArray(data.parcels)) throw new Error('bad');
+      const merged = Object.assign({}, defaultSettings(), data.settings);
+      S.settings = merged; S.products = data.products; S.parcels = data.parcels; S.rates = data.rates || null;
+      S.convHistory = Array.isArray(data.convHistory) ? data.convHistory : [];
+      lang = (merged.lang==='en')?'en':'zh';
+      saveSettings(); saveProducts(); saveParcels(); saveRatesCache(); saveConvHistory();
+      render();
+      toast(t('importSuccess'));
+    }catch(e){
+      toast(t('importFail'));
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ===== 动作分发（点击 / 回车统一入口） ===== */
+function runAction(action, id, el){
+  switch(action){
+    case 'go': go('#/'+id); break;
+    case 'back': go('#/home'); break;
+    case 'toggle-lang':
+      lang = lang==='zh' ? 'en' : 'zh';
+      S.settings.lang = lang;
+      saveSettings();
+      render();
+      break;
+    case 'open-admin':
+      if(ADMIN_OK){ go('#/admin'); } else { openLogin(); }
+      break;
+    case 'login-submit': {
+      const v = document.getElementById('login-pass');
+      if(v && v.value === S.settings.adminPass){ ADMIN_OK=true; closeModal(); go('#/admin'); }
+      else { toast(t('wrongPassword')); if(v){ v.value=''; v.focus(); } }
+      break;
+    }
+    case 'modal-cancel': closeModal(); break;
+    case 'confirm-ok': { const cb=confirmCb; confirmCb=null; closeModal(); if(cb) cb(); break; }
+    case 'admin-tab': go('#/admin?tab='+id); break;
+    /* 商品客户视图 */
+    case 'prod-cat': PS.cat = id; render(); break;
+    case 'prod-sort': PS.sort = document.querySelector('[data-action="prod-sort"]').value; render(); break;
+    case 'prod-search': PS.q = document.getElementById('prod-search').value; render(); break;
+    /* 快递查询 */
+    case 'parcel-query': {
+      const v = document.getElementById('p-tracking');
+      PQ.tracking = v ? v.value.trim() : '';
+      PQ.searched = true;
+      if(!PQ.tracking){ PQ.result=null; toast(t('enterTracking')); render(); break; }
+      const up = PQ.tracking.toUpperCase();
+      PQ.result = S.parcels.find(p=>p.trackingNo.toUpperCase()===up) || null;
+      render();
+      break;
+    }
+    /* 汇率 */
+    case 'rates-refresh': doRefresh(true); break;
+    case 'conv-swap': { const t=CV.from; CV.from=CV.to; CV.to=t; render(); break; }
+    case 'conv-save': {
+      if(!S.rates || S.rates.base!==S.settings.baseCurrency){ toast(t('convHint')); break; }
+      const rf = S.rates.rates[CV.from], rt = S.rates.rates[CV.to];
+      if(rf===undefined || rt===undefined){ toast(t('noRate')); break; }
+      const amount = parseFloat(CV.amount)||0;
+      const rate = rt/rf;
+      S.convHistory.unshift({id:uid(), amount:amount, from:CV.from, to:CV.to, rate:rate, result:amount*rate, time:new Date().toISOString()});
+      if(S.convHistory.length>50) S.convHistory = S.convHistory.slice(0,50);
+      saveConvHistory();
+      render();
+      toast(t('histSaved'));
+      break;
+    }
+    case 'conv-hist-del':
+      S.convHistory = S.convHistory.filter(h=>h.id!==id);
+      saveConvHistory(); render(); toast(t('deleted'));
+      break;
+    case 'conv-hist-clear':
+      confirmDlg(t('confirmClear'), ()=>{
+        S.convHistory = [];
+        saveConvHistory(); render(); toast(t('deleted'));
+      });
+      break;
+    /* 商品管理 */
+    case 'product-new': openProductForm(null); break;
+    case 'product-edit': openProductForm(id); break;
+    case 'product-del':
+      confirmDlg(id, ()=>{
+        S.products = S.products.filter(p=>p.id!==id);
+        saveProducts(); render(); toast(t('deleted'));
+      });
+      break;
+    case 'prod-img-pick': { const f=document.getElementById('pi-file'); if(f) f.click(); break; }
+    case 'prod-img-clear': pendingImg=''; { const p=document.getElementById('pi-prev'); if(p){ p.style.display='none'; p.src=''; } const b=document.querySelector('[data-action="prod-img-clear"]'); if(b) b.style.display='none'; } break;
+    case 'product-save': saveProductFromForm(); break;
+    /* 快递管理 */
+    case 'parcel-add': addParcelFromForm(); break;
+    case 'parcel-pick': {
+      const p=S.parcels.find(x=>x.id===id); if(p){ p.status='picked'; p.pickTime=new Date().toISOString(); saveParcels(); render(); }
+      break;
+    }
+    case 'parcel-undo': {
+      const p=S.parcels.find(x=>x.id===id); if(p){ p.status='pending'; p.pickTime=null; saveParcels(); render(); }
+      break;
+    }
+    case 'parcel-del':
+      confirmDlg(id, ()=>{
+        S.parcels = S.parcels.filter(p=>p.id!==id);
+        saveParcels(); render(); toast(t('deleted'));
+      });
+      break;
+    case 'parcel-filter': PA.filter = id; render(); break;
+    case 'parcel-search': PA.q = document.getElementById('pa-search').value; render(); break;
+    /* 汇率设置 */
+    case 'rates-save': saveRatesFromForm(); break;
+    /* 系统设置 */
+    case 'settings-store-save': {
+      const zh = document.getElementById('st-name-zh').value.trim();
+      const en = document.getElementById('st-name-en').value.trim();
+      if(zh) S.settings.storeNameZh = zh;
+      if(en) S.settings.storeNameEn = en;
+      saveSettings(); render(); toast(t('saved'));
+      break;
+    }
+    case 'settings-pass-save': {
+      const p1 = document.getElementById('st-pass1').value;
+      const p2 = document.getElementById('st-pass2').value;
+      if(p1.length<4){ toast(t('passTooShort')); break; }
+      if(p1!==p2){ toast(t('passMismatch')); break; }
+      S.settings.adminPass = p1;
+      saveSettings(); render(); toast(t('passChanged'));
+      break;
+    }
+    case 'cat-add': {
+      const zh = document.getElementById('cat-new-zh').value.trim();
+      const en = document.getElementById('cat-new-en').value.trim();
+      if(!zh && !en){ toast(t('catEmpty')); break; }
+      S.settings.categories.push({id:uid(), zh:zh||en, en:en||zh});
+      saveSettings(); render(); toast(t('saved'));
+      break;
+    }
+    case 'cat-save': {
+      const zh = document.getElementById('cat-zh-'+id).value.trim();
+      const en = document.getElementById('cat-en-'+id).value.trim();
+      const c = S.settings.categories.find(x=>x.id===id);
+      if(c && (zh||en)){ c.zh = zh||en; c.en = en||zh; saveSettings(); render(); toast(t('saved')); }
+      break;
+    }
+    case 'cat-del': {
+      const used = S.products.some(p=>p.categoryId===id);
+      if(used){ toast(t('catInUse')); break; }
+      S.settings.categories = S.settings.categories.filter(c=>c.id!==id);
+      saveSettings(); render(); toast(t('deleted'));
+      break;
+    }
+    case 'backup-export': exportData(); break;
+    case 'backup-import': { const f=document.getElementById('imp-file'); if(f) f.click(); break; }
+  }
+}
+
+/* 点击委托 */
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  runAction(el.getAttribute('data-action'), el.getAttribute('data-id')||'', el);
+});
+/* 回车委托 */
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  const t = e.target;
+  const act = t && t.getAttribute && t.getAttribute('data-enter');
+  if(act){ e.preventDefault(); runAction(act, t.getAttribute('data-id')||'', t); }
+});
+/* 文件选择 */
+document.addEventListener('change', e=>{
+  const t = e.target;
+  if(t.id==='pi-file'){
+    const f = t.files && t.files[0];
+    if(f) readImage(f, d=>{
+      pendingImg = d;
+      const p = document.getElementById('pi-prev');
+      if(p){ p.src=d; p.style.display='block'; }
+      const b = document.querySelector('[data-action="prod-img-clear"]');
+      if(b) b.style.display='inline-flex';
+    });
+    t.value='';
+  }else if(t.id==='cv-from'){
+    CV.from = t.value; updateConvResult();
+  }else if(t.id==='cv-to'){
+    CV.to = t.value; updateConvResult();
+  }else if(t.id==='imp-file'){
+    const f = t.files && t.files[0];
+    if(f) importData(f);
+    t.value='';
+  }
+});
+/* 输入框实时触发（商品搜索 / 快递搜索） */
+document.addEventListener('input', e=>{
+  const t = e.target;
+  const act = t && t.getAttribute && t.getAttribute('data-action');
+  if(act==='prod-search'){ PS.q = t.value; render(); }
+  else if(act==='parcel-search'){ PA.q = t.value; render(); }
+  else if(act==='conv-amount'){ CV.amount = t.value; updateConvResult(); }
+});
+window.addEventListener('hashchange', render);
+
+/* ===== 启动 ===== */
+load();
+render();
+</script>
+</body>
+</html>

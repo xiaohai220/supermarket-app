@@ -1,0 +1,10 @@
+# OS / editor junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Node (test runner has no deps, keep this for safety)
+node_modules/
