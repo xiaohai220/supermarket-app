@@ -392,7 +392,7 @@ const I18N = {
     productsCount:'共 {n} 件商品',
     parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
     parcelName:'收件人昵称', parcelNamePh:'如：阿里妈妈',
-    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
+    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取走',
     arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
@@ -459,7 +459,7 @@ const I18N = {
     productsCount:'{n} items',
     parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
     parcelName:'Recipient nickname', parcelNamePh:'e.g. Auntie Li',
-    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
+    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
     arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
@@ -874,7 +874,33 @@ function viewParcels(){
         '<button class="btn btn-primary" data-action="parcel-query">'+ICONS.search+esc(t('checkBtn'))+'</button>'+
       '</div>'+
     '</div>'+
-    resultHtml;
+    resultHtml+
+    publicParcelList();
+}
+function publicParcelList(){
+  const list = S.parcels.slice().sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  if(!list.length) return '';
+  const rows = list.map(p=>{
+    const statusBadge = p.status==='picked' ? '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>' : '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
+    const off = p.status==='picked';
+    const metaParts = [];
+    if(p.tail) metaParts.push('<span class="tag">'+esc(t('parcelTail'))+'</span> '+esc(p.tail));
+    if(p.note) metaParts.push(esc(p.note));
+    if(p.name) metaParts.push(esc(p.name));
+    return '<div class="p2'+(off?' off':'')+'">'+
+      '<div class="p2-main">'+
+        '<div class="p2-no num">'+esc(p.trackingNo)+'</div>'+
+        (metaParts.length?'<div class="p2-meta">'+metaParts.join(' · ')+'</div>':'')+
+      '</div>'+
+      '<div class="p2-time">'+fmtShortDT(p.arrivalTime)+'</div>'+
+      statusBadge+
+      '<div class="p2-num">'+esc(p.pickupNo||'—')+'</div>'+
+    '</div>';
+  }).join('');
+  return '<div class="card admin-panel" style="margin-top:16px">'+
+    '<div class="panel-head"><h3>'+esc(t('parcelAll'))+'</h3><span class="count num">'+esc(String(list.length))+'</span></div>'+
+    rows+
+  '</div>';
 }
 
 /* ===== 货币汇率 ===== */
