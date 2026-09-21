@@ -63,6 +63,7 @@ a{color:var(--green)}
 .brand-sub{color:rgba(255,255,255,.72);font-size:13px;margin-top:3px}
 .store-info{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:rgba(255,255,255,.85)}
 body.day .store-info{color:#3a4f44}
+.store-info span{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.12);line-height:1.4}
 .topbar-right{display:flex;gap:8px;flex-shrink:0}
 .barcode{height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,#F6E7B8 0 14px,rgba(255,255,255,.85) 14px 18px,rgba(255,255,255,.25) 18px 26px);margin-bottom:22px;opacity:.9}
 .page-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
@@ -352,6 +353,8 @@ body.night .barcode{opacity:.9}
   .p2-status{width:auto;flex:0 0 auto}
   .p2 .prow-ops{width:100%;justify-content:flex-end;margin-top:2px}
   .date-row{flex-wrap:wrap}
+  .store-info{flex-direction:column;gap:5px;font-size:13px;margin-top:10px}
+  .store-info span{width:100%}
 }
 @media (min-width:641px) and (max-width:1024px){
   .home-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
