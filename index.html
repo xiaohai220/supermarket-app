@@ -930,13 +930,14 @@ function publicParcelList(){
       const metaParts = [];
       if(p.note) metaParts.push(esc(p.note));
       if(p.name) metaParts.push(esc(p.name));
-      if(p.requestTime) metaParts.push('<span class="tag">'+esc(t('requestTime'))+' '+esc(fmtDT(p.requestTime))+'</span>');
+      const reqTimeCell = p.requestTime ? fmtShortDT(p.requestTime) : '—';
       return '<div class="p2'+(off?' off':'')+'">'+
         '<div class="p2-main">'+
           '<div class="p2-no num">'+esc(p.trackingNo)+'</div>'+
           (metaParts.length?'<div class="p2-meta">'+metaParts.join(' · ')+'</div>':'')+
         '</div>'+
         '<div class="p2-time">'+fmtShortDT(p.arrivalTime)+'</div>'+
+        '<div class="p2-time num">'+reqTimeCell+'</div>'+
         badge+
         '<div class="p2-num">'+esc(p.pickupNo||'—')+'</div>'+
       '</div>';
@@ -949,6 +950,7 @@ function publicParcelList(){
     '<div class="p2 p2-head">'+
       '<div class="p2-main"><div class="p2-h">'+esc(t('trackingNo'))+'</div></div>'+
       '<div class="p2-time p2-h">'+esc(t('arrivalTime'))+'</div>'+
+      '<div class="p2-time p2-h">'+esc(t('requestTime'))+'</div>'+
       '<div class="p2-h">'+esc(t('status'))+'</div>'+
       '<div class="p2-num p2-h">'+esc(t('parcelPickupNo'))+'</div>'+
     '</div>'+
