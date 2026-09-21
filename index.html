@@ -909,7 +909,7 @@ function publicParcelList(){
       const metaParts = [];
       if(p.note) metaParts.push(esc(p.note));
       if(p.name) metaParts.push(esc(p.name));
-      if(p.requested && p.requestTime) metaParts.push('<span class="tag">'+esc(t('requestTime'))+' '+esc(fmtDT(p.requestTime))+'</span>');
+      if(p.requestTime) metaParts.push('<span class="tag">'+esc(t('requestTime'))+' '+esc(fmtDT(p.requestTime))+'</span>');
       return '<div class="p2'+(off?' off':'')+'">'+
         '<div class="p2-main">'+
           '<div class="p2-no num">'+esc(p.trackingNo)+'</div>'+
@@ -1129,7 +1129,7 @@ function adminParcels(){
       if(p.tail) metaParts.push('<span class="tag">'+esc(t('parcelTail'))+'</span> '+esc(p.tail));
       if(p.note) metaParts.push(esc(p.note));
       if(p.name) metaParts.push(esc(p.name));
-      if(p.requested && p.requestTime) metaParts.push('<span class="tag">'+esc(t('requestTime'))+' '+esc(fmtDT(p.requestTime))+'</span>');
+      if(p.requestTime) metaParts.push('<span class="tag">'+esc(t('requestTime'))+' '+esc(fmtDT(p.requestTime))+'</span>');
       return '<div class="p2'+(off?' off':'')+'">'+
         '<div class="p2-main">'+
           '<div class="p2-no num">'+esc(p.trackingNo)+(p.requested?' <span class="badge b-review" style="margin-left:6px">'+esc(t('requestBadge'))+'</span>':'')+'</div>'+
