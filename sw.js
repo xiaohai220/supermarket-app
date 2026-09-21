@@ -1,5 +1,5 @@
 /* PWA Service Worker：网页走网络优先（保证更新即时生效），静态资源缓存兜底 */
-const CACHE = 'supermarket-v2';
+const CACHE = 'supermarket-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -24,6 +24,8 @@ self.addEventListener('fetch', (e) => {
   if (url.hostname.includes('er-api.com')) return;
   // 只处理 GET
   if (e.request.method !== 'GET') return;
+  // 数据接口始终走网络，绝不缓存
+  if (url.pathname.startsWith('/api/')) return;
 
   // 页面导航（HTML）：网络优先，失败再用缓存
   if (e.request.mode === 'navigate') {

@@ -579,8 +579,10 @@ const S = { settings:null, products:[], parcels:[], consign:[] };
 const USE_REMOTE = (typeof location!=='undefined' && location.protocol && location.protocol.indexOf('http')===0);
 let _remoteTimer=null;
 let _localDirtyUntil=0;
+let _remoteReady=false;
 function remoteSync(){
   if(!USE_REMOTE) return;
+  if(!_remoteReady) return; // 还没从服务器拉到最新数据前，不用本地旧数据覆盖服务器
   _localDirtyUntil = Date.now()+2500; // 本地刚改过，2.5秒内不拉服务器覆盖
   clearTimeout(_remoteTimer);
   _remoteTimer=setTimeout(()=>{
@@ -598,6 +600,7 @@ async function remoteInit(){
     if(Array.isArray(d.products)) S.products=d.products;
     if(Array.isArray(d.parcels)) S.parcels=d.parcels;
     if(Array.isArray(d.consign)) S.consign=d.consign;
+    _remoteReady=true;
     lang=(S.settings.lang==='en')?'en':'zh';
     // 服务器首次为空：种入示例数据并上传
     if(S.parcels.length===0 && S.products.length===0){
