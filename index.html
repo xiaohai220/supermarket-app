@@ -396,6 +396,7 @@ const I18N = {
     consignStatusPending:'待审核', consignStatusOn:'在售中', consignStatusSold:'已售出', xianyuWant:'我想要',
     consignRequireTitle:'请填写物品名称', consignRequirePrice:'请填写正确的价格', consignRequireContact:'请填写联系电话',
     consignNoResult:'未找到该联系电话的寄售记录', consignSubmitTime:'提交时间', consignContact:'联系电话', consignConsignor:'寄售人',
+    consignBuy:'我要购买', consignBuyPhone:'买家手机号', consignBuyPhonePh:'请输入您的手机号', consignBuyPhoneRequired:'请填写买家手机号', consignBuySubmitted:'已提交，卖家会联系您', consignBuyers:'买家联系',
     consignPriceUnit:'价格',
     adminTitle:'管理模式', adminDesc:'本机维护入口，客户界面不显示',
     loginTitle:'输入管理口令', loginBtn:'进入', wrongPassword:'口令不正确',
@@ -457,6 +458,7 @@ const I18N = {
     consignStatusPending:'Pending review', consignStatusOn:'On sale', consignStatusSold:'Sold', xianyuWant:'Want it',
     consignRequireTitle:'Please enter an item name', consignRequirePrice:'Please enter a valid price', consignRequireContact:'Please enter a contact phone',
     consignNoResult:'No consignment found for this phone number', consignSubmitTime:'Submitted', consignContact:'Phone', consignConsignor:'Consignor',
+    consignBuy:'I want to buy', consignBuyPhone:'Buyer phone', consignBuyPhonePh:'Enter your phone number', consignBuyPhoneRequired:'Please enter buyer phone', consignBuySubmitted:'Sent, the seller will contact you', consignBuyers:'Buyers',
     consignPriceUnit:'Price',
     adminTitle:'Staff Mode', adminDesc:'Local maintenance, hidden from customers',
     loginTitle:'Enter staff password', loginBtn:'Enter', wrongPassword:'Incorrect password',
@@ -1049,6 +1051,7 @@ function adminConsign(){
           '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+
             (c.desc?' · '+esc(c.desc):'')+'</div>'+
           '<div class="prow-sub">'+esc(t('consignContact'))+'：'+esc(c.contact||'—')+(c.consignor?' · '+esc(t('consignConsignor'))+'：'+esc(c.consignor):'')+' · '+esc(t('consignSubmitTime'))+'：<span class="num">'+esc(fmtDT(c.createTime))+'</span>'+(c.soldTime?' · '+esc(t('consignStatusSold'))+'：<span class="num">'+esc(fmtDT(c.soldTime))+'</span>':'')+'</div>'+
+          (Array.isArray(c.buyers)&&c.buyers.length?'<div class="prow-sub" style="color:#ff6b35">'+ICONS.info+' '+esc(t('consignBuyers'))+'：'+c.buyers.map(b=>esc(b.phone)+' <span class="num" style="opacity:.7">('+esc(fmtDT(b.time))+')</span>').join('， ')+'</div>':'')+
         '</div>'+
         '<div class="prow-ops">'+ops+'</div>'+
       '</div>';
@@ -1224,12 +1227,40 @@ function runAction(action, id, el){
         (c.desc?'<p style="color:var(--ink-2);font-size:14px;line-height:1.6;margin:8px 0">'+esc(c.desc)+'</p>':'')+
         '<div style="margin-top:12px;font-size:13px;color:var(--ink-2);line-height:2">'+
           '<div>'+ICONS.info+' <b>'+esc(t('consignConsignor'))+'：</b>'+esc(c.consignor||'—')+'</div>'+
-          '<div>'+ICONS.shelf+' <b>'+esc(t('consignContactLabel'))+'：</b><span class="num">'+esc(c.contact||'—')+'</span></div>'+
           '<div>'+ICONS.clock+' <b>'+esc(t('consignSubmitTime'))+'：</b><span class="num">'+esc(fmtDT(c.createTime))+'</span></div>'+
           (c.soldTime?'<div>'+ICONS.clock+' <b>'+esc(t('consignStatusSold'))+'：</b><span class="num">'+esc(fmtDT(c.soldTime))+'</span></div>':'')+
         '</div>'+
-        '<div style="margin-top:16px;display:flex;justify-content:flex-end"><button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('close'))+'</button></div>'
+        '<div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">'+
+          '<button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('close'))+'</button>'+
+          (c.status==='on'?'<button class="btn btn-primary" data-action="consign-buy" data-id="'+esc(c.id)+'">'+ICONS.tag+esc(t('consignBuy'))+'</button>':'')+
+        '</div>'
       );
+      break;
+    }
+    case 'consign-buy': {
+      const c = S.consign.find(x=>x.id===id);
+      if(!c) break;
+      openModal(
+        '<h3 style="margin-bottom:10px">'+esc(t('consignBuy'))+'</h3>'+
+        '<p style="color:var(--ink-3);font-size:13px;margin-bottom:12px">'+esc(c.title)+'</p>'+
+        '<div class="field"><label>'+esc(t('consignBuyPhone'))+'</label><input type="tel" id="cs-buy-phone" placeholder="'+esc(t('consignBuyPhonePh'))+'" autofocus></div>'+
+        '<div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">'+
+          '<button class="btn btn-ghost" data-action="consign-detail" data-id="'+esc(c.id)+'">'+esc(t('cancel'))+'</button>'+
+          '<button class="btn btn-primary" data-action="consign-buy-submit" data-id="'+esc(c.id)+'">'+esc(t('confirm'))+'</button>'+
+        '</div>'
+      );
+      break;
+    }
+    case 'consign-buy-submit': {
+      const c = S.consign.find(x=>x.id===id);
+      if(!c) break;
+      const phone = ((document.getElementById('cs-buy-phone')||{}).value||'').trim();
+      if(!phone){ toast(t('consignBuyPhoneRequired')); break; }
+      if(!Array.isArray(c.buyers)) c.buyers = [];
+      c.buyers.push({ phone:phone, time:new Date().toISOString() });
+      saveConsign();
+      closeModal();
+      toast(t('consignBuySubmitted'));
       break;
     }
     case 'consign-submit': {
