@@ -1,5 +1,5 @@
-/* PWA Service Worker：缓存应用外壳，支持离线打开 / 添加到主屏幕 */
-const CACHE = 'supermarket-v1';
+/* PWA Service Worker：网页走网络优先（保证更新即时生效），静态资源缓存兜底 */
+const CACHE = 'supermarket-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -20,9 +20,24 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  // 汇率接口走网络，不缓存
+  // 汇率接口始终走网络
   if (url.hostname.includes('er-api.com')) return;
-  // 其余资源：缓存优先
+  // 只处理 GET
+  if (e.request.method !== 'GET') return;
+
+  // 页面导航（HTML）：网络优先，失败再用缓存
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match('./index.html').then((h) => h || caches.match('./')))
+    );
+    return;
+  }
+
+  // 其余静态资源：缓存优先，后台更新
   e.respondWith(
     caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
       const copy = res.clone();

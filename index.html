@@ -1464,8 +1464,15 @@ applyTheme();
 /* ===== PWA：部署到 https 后注册 service worker，支持添加到主屏幕 ===== */
 (function(){
   try{
-    if('serviceWorker' in navigator && location.protocol==='https:'){
-      navigator.serviceWorker.register('sw.js').catch(function(){});
+    if('serviceWorker' in navigator){
+      if(location.protocol==='https:'){
+        navigator.serviceWorker.register('sw.js').catch(function(){});
+      }
+      // 新版 SW 一接管就自动刷新一次，确保用户拿到最新页面（清掉旧缓存行为）
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function(){
+        if(!refreshing){ refreshing = true; location.reload(); }
+      });
     }
   }catch(e){}
 })();
