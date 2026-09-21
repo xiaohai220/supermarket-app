@@ -1,0 +1,12 @@
+{
+  "name": "supermarket-app",
+  "version": "1.0.0",
+  "description": "超市客户服务应用（商品展示 / 快递 / 二手寄售）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
