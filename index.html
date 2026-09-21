@@ -707,7 +707,7 @@ function consignCardHtml(c, cur){
 /* ===== 视图状态 ===== */
 const PS = { q:'', cat:'all', sort:'default' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
-const PL = { q:'', status:'all' }; // 客户快递列表筛选
+const PL = { q:'', status:'all', page:1 }; // 客户快递列表筛选
 const PA = { filter:'all', q:'', page:1 };                 // 快递管理
 const PAGE_SIZE = 10;
 let ADMIN_OK = false;
@@ -900,11 +900,15 @@ function publicParcelList(){
   }
   const chips = [['all',t('filterAll')],['pending',t('statusPending')],['picked',t('statusPicked')]]
     .map(x=>'<button class="chip '+(PL.status===x[0]?'on':'')+'" data-action="plist-filter" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if(PL.page > totalPages) PL.page = totalPages;
+  if(PL.page < 1) PL.page = 1;
+  const pageList = list.slice((PL.page-1)*PAGE_SIZE, PL.page*PAGE_SIZE);
   let rows;
   if(!list.length){
     rows = '<div class="empty" style="padding:22px 10px"><div class="e-ico">'+ICONS.box+'</div><p>'+esc(t('notFoundTitle'))+'</p></div>';
   }else{
-    rows = list.map(p=>{
+    rows = pageList.map(p=>{
       let badge;
       if(p.status==='picked'){
         badge = '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>';
@@ -934,6 +938,7 @@ function publicParcelList(){
     '<div class="search-wrap" style="margin-bottom:8px">'+ICONS.search+'<input id="plist-search" data-action="plist-search" placeholder="'+esc(t('plistPh'))+'" value="'+esc(PL.q)+'"></div>'+
     '<div class="chips" style="margin-bottom:10px">'+chips+'</div>'+
     rows+
+    pagerHtml(PL.page, totalPages, 'plist-page')+
   '</div>';
 }
 
@@ -1559,8 +1564,9 @@ function runAction(action, id, el){
       });
       break;
     case 'parcel-filter': PA.filter = id; PA.page = 1; render(); break;
-    case 'plist-filter': PL.status = id; render(); break;
+    case 'plist-filter': PL.status = id; PL.page = 1; render(); break;
     case 'parcel-page': PA.page = parseInt(id,10)||1; render(); break;
+    case 'plist-page': PL.page = parseInt(id,10)||1; render(); break;
     case 'parcel-search': PA.q = document.getElementById('pa-search').value; PA.page = 1; render(); break;
     /* 系统设置 */
     case 'settings-store-save': {
@@ -1658,7 +1664,7 @@ document.addEventListener('input', e=>{
     if(c) c.textContent = fmtCount(t('productsCount'),{n:list.length});
   }
   else if(act==='parcel-search'){ PA.q = t.value; render(); }
-  else if(act==='plist-search'){ PL.q = t.value;
+  else if(act==='plist-search'){ PL.q = t.value; PL.page = 1;
     const wrap = document.querySelector('.admin-panel .panel-head');
     // 局部重渲染列表区域，避免输入框失焦
     const card = t.closest('.admin-panel');
