@@ -172,6 +172,9 @@ body.night .barcode{opacity:.9}
 .b-no{background:var(--ink-3);color:#fff}
 .b-wait{background:var(--orange-soft);color:var(--orange)}
 .b-done{background:var(--green-soft);color:var(--green-dark)}
+.b-review{background:#fff3cd;color:#b8860b;border:1px solid #ffe08a}
+.badge.clickable{cursor:pointer;font:inherit;border:none}
+.badge.clickable:active{transform:scale(.96)}
 
 /* ============ 空状态 ============ */
 .empty{padding:56px 20px;text-align:center;color:var(--ink-2)}
@@ -393,6 +396,7 @@ const I18N = {
     parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
     parcelName:'收件人昵称', parcelNamePh:'如：阿里妈妈',
     parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', plistPh:'搜昵称 / 单号 / 单号后四位 / 编号', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
+    statusReview:'待审核', reviewTip:'已申请取件，等待店员确认', requestPickTip:'点击申请取件', requestBadge:'客户申请取件', requestSent:'已提交取件申请，等待店员确认', rejectRequest:'驳回申请', rejected:'已驳回申请',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取走',
     arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
@@ -460,6 +464,7 @@ const I18N = {
     parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
     parcelName:'Recipient nickname', parcelNamePh:'e.g. Auntie Li',
     parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', plistPh:'Search name / No. / last 4 / pickup No.', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
+    statusReview:'In review', reviewTip:'Pickup requested, waiting for staff', requestPickTip:'Tap to request pickup', requestBadge:'Customer requested pickup', requestSent:'Pickup request sent, waiting for staff', rejectRequest:'Reject request', rejected:'Request rejected',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
     arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
@@ -892,7 +897,14 @@ function publicParcelList(){
     rows = '<div class="empty" style="padding:22px 10px"><div class="e-ico">'+ICONS.box+'</div><p>'+esc(t('notFoundTitle'))+'</p></div>';
   }else{
     rows = list.map(p=>{
-      const statusBadge = p.status==='picked' ? '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>' : '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
+      let badge;
+      if(p.status==='picked'){
+        badge = '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>';
+      }else if(p.requested){
+        badge = '<span class="badge b-review" title="'+esc(t('reviewTip'))+'">'+esc(t('statusReview'))+'</span>';
+      }else{
+        badge = '<button class="badge b-wait clickable" data-action="parcel-request-pick" data-id="'+esc(p.id)+'" title="'+esc(t('requestPickTip'))+'">'+esc(t('statusPending'))+'</button>';
+      }
       const off = p.status==='picked';
       const metaParts = [];
       if(p.note) metaParts.push(esc(p.note));
@@ -903,7 +915,7 @@ function publicParcelList(){
           (metaParts.length?'<div class="p2-meta">'+metaParts.join(' · ')+'</div>':'')+
         '</div>'+
         '<div class="p2-time">'+fmtShortDT(p.arrivalTime)+'</div>'+
-        statusBadge+
+        badge+
         '<div class="p2-num">'+esc(p.pickupNo||'—')+'</div>'+
       '</div>';
     }).join('');
@@ -1102,7 +1114,14 @@ function adminParcels(){
     rows = '<div class="empty" style="padding:30px 12px"><div class="e-ico">'+ICONS.box+'</div><h3>'+esc(t('noParcels'))+'</h3></div>';
   }else{
     rows = filtered.map(p=>{
-      const statusBadge = p.status==='picked' ? '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>' : '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
+      let statusBadge;
+      if(p.status==='picked'){
+        statusBadge = '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>';
+      }else if(p.requested){
+        statusBadge = '<span class="badge b-review">'+esc(t('statusReview'))+'</span>';
+      }else{
+        statusBadge = '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
+      }
       const off = p.status==='picked';
       const dt = fmtShortDT(p.arrivalTime);
       const metaParts = [];
@@ -1111,7 +1130,7 @@ function adminParcels(){
       if(p.name) metaParts.push(esc(p.name));
       return '<div class="p2'+(off?' off':'')+'">'+
         '<div class="p2-main">'+
-          '<div class="p2-no num">'+esc(p.trackingNo)+'</div>'+
+          '<div class="p2-no num">'+esc(p.trackingNo)+(p.requested?' <span class="badge b-review" style="margin-left:6px">'+esc(t('requestBadge'))+'</span>':'')+'</div>'+
           (metaParts.length?'<div class="p2-meta">'+metaParts.join(' · ')+'</div>':'')+
         '</div>'+
         '<div class="p2-time">'+dt+'</div>'+
@@ -1121,6 +1140,7 @@ function adminParcels(){
           (off
             ? '<button class="btn btn-ghost btn-sm" data-action="parcel-undo" data-id="'+esc(p.id)+'">'+esc(t('undoPick'))+'</button>'
             : '<button class="btn btn-primary btn-sm" data-action="parcel-pick" data-id="'+esc(p.id)+'">'+ICONS.check+esc(t('markPicked'))+'</button>')+
+          (!off && p.requested ? '<button class="btn btn-ghost btn-sm" data-action="parcel-reject" data-id="'+esc(p.id)+'">'+esc(t('rejectRequest'))+'</button>' : '')+
           '<button class="icon-btn" data-action="parcel-del" data-id="'+esc(p.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
         '</div>'+
       '</div>';
@@ -1490,11 +1510,19 @@ function runAction(action, id, el){
     /* 快递管理 */
     case 'parcel-add': addParcelFromForm(); break;
     case 'parcel-pick': {
-      const p=S.parcels.find(x=>x.id===id); if(p){ p.status='picked'; p.pickTime=new Date().toISOString(); saveParcels(); render(); }
+      const p=S.parcels.find(x=>x.id===id); if(p){ p.status='picked'; p.pickTime=new Date().toISOString(); p.requested=false; saveParcels(); render(); }
+      break;
+    }
+    case 'parcel-request-pick': {
+      const p=S.parcels.find(x=>x.id===id); if(p && p.status==='pending' && !p.requested){ p.requested=true; p.requestTime=new Date().toISOString(); saveParcels(); render(); toast(t('requestSent')); }
+      break;
+    }
+    case 'parcel-reject': {
+      const p=S.parcels.find(x=>x.id===id); if(p){ p.requested=false; p.requestTime=null; saveParcels(); render(); toast(t('rejected')); }
       break;
     }
     case 'parcel-undo': {
-      const p=S.parcels.find(x=>x.id===id); if(p){ p.status='pending'; p.pickTime=null; saveParcels(); render(); }
+      const p=S.parcels.find(x=>x.id===id); if(p){ p.status='pending'; p.pickTime=null; p.requested=false; saveParcels(); render(); }
       break;
     }
     case 'parcel-del':
