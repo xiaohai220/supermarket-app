@@ -1119,11 +1119,9 @@ function adminParcels(){
     '<div class="card card-pad">'+
       '<h3 style="margin-bottom:14px">'+esc(t('addParcel'))+'</h3>'+
       '<div class="field"><label>'+esc(t('trackingNo'))+' *</label><input type="text" id="pa-no" placeholder="'+esc(t('trackingPlaceholder'))+'" data-enter="parcel-add"></div>'+
-      '<div class="field"><label>'+esc(t('parcelTail'))+'</label><input type="text" id="pa-tail" placeholder="'+esc(t('parcelTailPh'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('parcelNote'))+'</label><input type="text" id="pa-note" placeholder="'+esc(t('parcelNotePh'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('parcelPickupNo'))+'</label><input type="text" id="pa-pickupno" placeholder="'+esc(t('parcelPickupNoPh'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('parcelName'))+'</label><input type="text" id="pa-name" placeholder="'+esc(t('parcelNamePh'))+'" data-enter="parcel-add"></div>'+
-      '<div class="field"><label>'+esc(t('shelfNo'))+'</label><input type="text" id="pa-shelf" placeholder="'+esc(t('shelfPlaceholder'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('arrival'))+'</label><input type="datetime-local" id="pa-time" value="'+esc(curTime)+'"></div>'+
       '<label class="check-row"><input type="checkbox" id="pa-quick">'+esc(t('quickAdd'))+'</label>'+
       '<div style="margin-top:10px"><button class="btn btn-primary" data-action="parcel-add">'+ICONS.plus+esc(t('register'))+'</button></div>'+
@@ -1139,19 +1137,17 @@ function adminParcels(){
 function addParcelFromForm(){
   const no = document.getElementById('pa-no').value.replace(/\s+/g,'').toUpperCase();
   const name = (document.getElementById('pa-name')||{}).value.trim();
-  const tail = (document.getElementById('pa-tail')||{}).value.trim();
   const note = (document.getElementById('pa-note')||{}).value.trim();
   const pickupNo = (document.getElementById('pa-pickupno')||{}).value.trim();
-  const shelf = document.getElementById('pa-shelf').value.trim();
   const timeVal = document.getElementById('pa-time').value;
   const quick = document.getElementById('pa-quick').checked;
   if(!no){ toast(t('requireTracking')); return; }
   if(S.parcels.some(p=>p.trackingNo.toUpperCase()===no)){ toast(t('dupTracking')); return; }
   const arrivalTime = timeVal ? new Date(timeVal).toISOString() : new Date().toISOString();
-  S.parcels.push({id:uid(), trackingNo:no, name:name, tail:tail, note:note, pickupNo:pickupNo, shelf:shelf, arrivalTime:arrivalTime, status:'pending', pickTime:null});
+  S.parcels.push({id:uid(), trackingNo:no, name:name, note:note, pickupNo:pickupNo, arrivalTime:arrivalTime, status:'pending', pickTime:null});
   if(!saveParcels()){ toast(t('storageError')); return; }
   if(quick){ document.getElementById('pa-no').value=''; }
-  else{ ['pa-no','pa-name','pa-tail','pa-note','pa-pickupno','pa-shelf'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; }); }
+  else{ ['pa-no','pa-name','pa-note','pa-pickupno'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; }); }
   render();
   toast(t('parcelAdded'));
 }
