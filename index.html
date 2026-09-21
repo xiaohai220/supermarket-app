@@ -724,6 +724,8 @@ function go(hash){ if(location.hash===hash){ render(); } else { location.hash = 
 function render(){
   const r = route();
   const app = document.getElementById('app');
+  const prevRoute = (window.__SM_ROUTE||'');
+  const prevScroll = (window.__SM_SCROLL||0);
   document.title = t('appTitle');
   let html='';
   if(r.name==='admin' && !ADMIN_OK){
@@ -740,7 +742,10 @@ function render(){
     default:         html = viewHome();
   }
   app.innerHTML = html;
-  window.scrollTo(0,0);
+  if(r.name===prevRoute){ window.scrollTo(0, prevScroll); }
+  else { window.scrollTo(0,0); }
+  window.__SM_ROUTE = r.name;
+  window.__SM_SCROLL = window.scrollY||0;
   afterRender(r);
 }
 function afterRender(r){ /* 无自动联网任务 */ }
@@ -1649,6 +1654,7 @@ document.addEventListener('input', e=>{
   }
 });
 window.addEventListener('hashchange', render);
+window.addEventListener('scroll', ()=>{ window.__SM_SCROLL = window.scrollY||0; }, {passive:true});
 
 /* ===== 启动 ===== */
 load();
