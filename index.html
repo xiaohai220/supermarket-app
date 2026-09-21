@@ -381,6 +381,7 @@ const I18N = {
     emptyProductsTitle:'暂无商品', emptyProductsDesc:'店主可在首页底部「管理模式」中添加商品',
     productsCount:'共 {n} 件商品',
     parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
+    parcelName:'收件人昵称', parcelNamePh:'如：阿里妈妈',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取走',
     arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
     notFoundTitle:'未找到该运单', notFoundDesc:'请核对运单号是否输入正确，或到服务台咨询工作人员。',
@@ -445,6 +446,7 @@ const I18N = {
     emptyProductsTitle:'No products yet', emptyProductsDesc:'The owner can add products in "Staff Mode" at the bottom of the home page',
     productsCount:'{n} items',
     parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
+    parcelName:'Recipient nickname', parcelNamePh:'e.g. Auntie Li',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
     arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
     notFoundTitle:'Tracking number not found', notFoundDesc:'Please check the number, or ask our staff at the service counter.',
@@ -813,6 +815,7 @@ function viewParcels(){
         '</div>'+
         '<div class="dl">'+
           '<dt>'+esc(t('trackingNo'))+'</dt><dd class="num">'+esc(p.trackingNo)+'</dd>'+
+          (p.name?'<dt>'+esc(t('parcelName'))+'</dt><dd>'+esc(p.name)+'</dd>':'')+
           '<dt>'+ICONS.shelf+' '+esc(t('shelf'))+'</dt><dd>'+esc(p.shelf||'—')+'</dd>'+
           '<dt>'+ICONS.clock+' '+esc(t('arrivalTime'))+'</dt><dd class="num">'+esc(fmtDT(p.arrivalTime))+'</dd>'+
           '<dt>'+ICONS.check+' '+esc(t('pickTime'))+'</dt><dd class="num">'+(p.pickTime?esc(fmtDT(p.pickTime)):'—')+'</dd>'+
@@ -1026,7 +1029,7 @@ function adminParcels(){
       if(p.pickTime) sub += ' · '+esc(t('pickTime'))+'：<span class="num">'+esc(fmtDT(p.pickTime))+'</span>';
       return '<div class="prow">'+
         '<div class="prow-info">'+
-          '<div class="prow-name num">'+esc(p.trackingNo)+' '+statusBadge+'</div>'+
+          '<div class="prow-name num">'+esc(p.trackingNo)+(p.name?' · <span style="color:var(--ink);font-weight:600">'+esc(p.name)+'</span>':'')+' '+statusBadge+'</div>'+
           '<div class="prow-sub">'+sub+'</div>'+
         '</div>'+
         '<div class="prow-ops">'+
@@ -1044,6 +1047,7 @@ function adminParcels(){
     '<div class="card card-pad">'+
       '<h3 style="margin-bottom:14px">'+esc(t('addParcel'))+'</h3>'+
       '<div class="field"><label>'+esc(t('trackingNo'))+' *</label><input type="text" id="pa-no" placeholder="'+esc(t('trackingPlaceholder'))+'" data-enter="parcel-add"></div>'+
+      '<div class="field"><label>'+esc(t('parcelName'))+'</label><input type="text" id="pa-name" placeholder="'+esc(t('parcelNamePh'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('shelfNo'))+'</label><input type="text" id="pa-shelf" placeholder="'+esc(t('shelfPlaceholder'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('arrival'))+'</label><input type="datetime-local" id="pa-time" value="'+esc(curTime)+'"></div>'+
       '<label class="check-row"><input type="checkbox" id="pa-quick">'+esc(t('quickAdd'))+'</label>'+
@@ -1059,16 +1063,17 @@ function adminParcels(){
 }
 function addParcelFromForm(){
   const no = document.getElementById('pa-no').value.replace(/\s+/g,'').toUpperCase();
+  const name = (document.getElementById('pa-name')||{}).value.trim();
   const shelf = document.getElementById('pa-shelf').value.trim();
   const timeVal = document.getElementById('pa-time').value;
   const quick = document.getElementById('pa-quick').checked;
   if(!no){ toast(t('requireTracking')); return; }
   if(S.parcels.some(p=>p.trackingNo.toUpperCase()===no)){ toast(t('dupTracking')); return; }
   const arrivalTime = timeVal ? new Date(timeVal).toISOString() : new Date().toISOString();
-  S.parcels.push({id:uid(), trackingNo:no, shelf:shelf, arrivalTime:arrivalTime, status:'pending', pickTime:null});
+  S.parcels.push({id:uid(), trackingNo:no, name:name, shelf:shelf, arrivalTime:arrivalTime, status:'pending', pickTime:null});
   if(!saveParcels()){ toast(t('storageError')); return; }
   if(quick){ document.getElementById('pa-no').value=''; }
-  else{ document.getElementById('pa-no').value=''; document.getElementById('pa-shelf').value=''; }
+  else{ document.getElementById('pa-no').value=''; document.getElementById('pa-name').value=''; document.getElementById('pa-shelf').value=''; }
   render();
   toast(t('parcelAdded'));
 }
