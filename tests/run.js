@@ -250,7 +250,8 @@ async function main() {
     api.go('#/consign'); api.render();
     check('3.1 客户寄售页可打开', api.appHtml().includes('consignTitle') || /寄售|Consign/i.test(api.appHtml()));
 
-    // 客户提交寄售申请（缺必填应拒绝）
+    // 客户提交寄售申请（缺必填应拒绝）—— 先点圆形+进入发布表单页
+    api.go('#/consign?new=1'); api.render();
     api.setVal('cs-title', '九成新自行车');
     api.setVal('cs-desc', '男式，骑了半年');
     api.setVal('cs-price', '4500');
@@ -262,6 +263,7 @@ async function main() {
 
     // 缺联系电话应拒绝
     const before = api.S.consign.length;
+    api.go('#/consign?new=1'); api.render();
     api.setVal('cs-title', '缺电话'); api.setVal('cs-price', '10'); api.setVal('cs-contact', '');
     api.runAction('consign-submit', '', null);
     check('3.4 缺联系电话被拒绝', api.S.consign.length === before);
