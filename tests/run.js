@@ -76,12 +76,12 @@ function boot(opts) {
   const src = m[1];
   const expose = [
     ';return {',
-    '  S, KEYS, PS, PQ, PA, CV, RATE_STATE, get ADMIN_OK(){return ADMIN_OK;}, FORM_PRODUCT_ID,',
-    '  render, runAction, go, openModal, closeModal, openLogin, doRefresh, fetchRates,',
-    '  viewHome, viewProducts, viewParcels, viewRates, viewAdmin,',
-    '  LS, load, saveSettings, saveProducts, saveParcels, saveRatesCache, saveConvHistory,',
-    '  esc, fmtMoney, fmtRate, fmtConv, fmtDT, curName,',
-    '  converterCard, historyCard, openProductForm, exportData, importData,',
+    '  S, KEYS, PS, PQ, PA, CS, CSM, get ADMIN_OK(){return ADMIN_OK;}, FORM_PRODUCT_ID, FORM_CONSIGN_IMG,',
+    '  render, runAction, go, openModal, closeModal, openLogin,',
+    '  viewHome, viewProducts, viewParcels, viewConsign, viewAdmin, adminConsign,',
+    '  LS, load, saveSettings, saveProducts, saveParcels, saveConsign,',
+    '  esc, fmtMoney, fmtDT,',
+    '  openProductForm, exportData, importData,',
     '  toast, confirmDlg, uid',
     '};'
   ].join('\n');
@@ -136,8 +136,8 @@ async function main() {
     check('0.10 路由到商品页并渲染', api.appHtml().includes('products') || /商品|Product/i.test(api.appHtml()));
     api.go('#/parcels'); api.render();
     check('0.11 路由到快递页并渲染', api.appHtml().includes('parcels') || /快递|Parcel/i.test(api.appHtml()));
-    api.go('#/rates'); api.render();
-    check('0.12 路由到汇率页并渲染', api.appHtml().includes('rates') || /汇率|Rate/i.test(api.appHtml()));
+    api.go('#/consign'); api.render();
+    check('0.12 路由到寄售页并渲染', api.appHtml().includes('consign') || /寄售|Consign/i.test(api.appHtml()));
     // 主题切换持久化
     const before = api.S.settings.theme;
     api.runAction('toggle-theme', '', null);
@@ -150,6 +150,7 @@ async function main() {
   section('阶段1 商品展示：空态 / 增改删 / 搜索排序');
   {
     const api = boot();
+    api.go('#/products'); api.render();
     check('1.1 无商品时显示空态', /暂无|empty|no product/i.test(api.appHtml()));
   }
   {
@@ -242,61 +243,64 @@ async function main() {
     check('2.10 撤销标记后回到待取', api.S.parcels[0].status === 'pending');
   }
 
-  // ===== 阶段3 汇率与换汇 =====
-  section('阶段3 汇率：联网获取 / 口径 / 换汇公式 / 离线红色标注 / 历史');
+  // ===== 阶段3 二手寄售：客户提交 / 管理员审核上架 / 标记售出 / 查询 =====
+  section('阶段3 二手寄售：客户提交 / 管理员审核上架 / 标记售出 / 按电话查询');
   {
-    let calls = 0;
-    const api = boot({ fetch: async () => { calls++; return { ok: true, json: async () => ({ result: 'success', base_code: 'PKR', rates: okRates('PKR') }) }; } });
-    await api.doRefresh(true);
-    check('3.1 联网获取后 RATE_STATE.fresh=true', api.RATE_STATE.fresh === true);
-    check('3.2 汇率缓存写入 localStorage sm_rates', !!api.store['sm_rates']);
-    const cached = JSON.parse(api.store['sm_rates']);
-    check('3.3 缓存含 base/rates/updatedAt', cached.base === 'PKR' && cached.rates && cached.updatedAt);
-    api.go('#/rates'); api.render();
-    check('3.4 列表显示绿色在线状态', /已使用最新在线汇率|latest|online/i.test(api.appHtml()));
+    const api = boot();
+    api.go('#/consign'); api.render();
+    check('3.1 客户寄售页可打开', api.appHtml().includes('consignTitle') || /寄售|Consign/i.test(api.appHtml()));
 
-    api.CV.amount = '100'; api.CV.from = 'USD'; api.CV.to = 'PKR';
-    const c1 = api.converterCard();
-    check('3.5 USD100→PKR ≈ 27,793', c1.includes('27,793'));
-    api.CV.amount = '27793'; api.CV.from = 'PKR'; api.CV.to = 'USD';
-    const c2 = api.converterCard();
-    check('3.6 PKR27793→USD ≈ 99.99', c2.includes('99.99') || c2.includes('100.0'));
+    // 客户提交寄售申请（缺必填应拒绝）
+    api.setVal('cs-title', '九成新自行车');
+    api.setVal('cs-desc', '男式，骑了半年');
+    api.setVal('cs-price', '4500');
+    api.setVal('cs-contact', '0300-1234567');
+    api.setVal('cs-consignor', '阿里');
+    api.runAction('consign-submit', '', null);
+    check('3.2 提交后生成 pending 记录', api.S.consign.length === 1 && api.S.consign[0].status === 'pending');
+    check('3.3 寄售字段完整', api.S.consign[0].title === '九成新自行车' && near(api.S.consign[0].price, 4500, 0.001) && api.S.consign[0].contact === '0300-1234567');
 
-    // 历史
-    api.CV.amount = '50'; api.CV.from = 'USD'; api.CV.to = 'PKR';
-    api.runAction('conv-save', '', null);
-    check('3.7 记录本次换算后 history +1', api.S.convHistory.length === 1);
-    check('3.8 历史记录字段完整(from/to/rate/result/amount)',
-      api.S.convHistory[0].from === 'USD' && api.S.convHistory[0].to === 'PKR' &&
-      near(api.S.convHistory[0].rate, 1 / R.USD, 0.01) && near(api.S.convHistory[0].result, 50 / R.USD, 1) && api.S.convHistory[0].amount === 50);
-    api.runAction('conv-hist-del', api.S.convHistory[0].id, null);
-    check('3.9 删除单条历史后归零', api.S.convHistory.length === 0);
-    api.runAction('conv-save', '', null);
-    api.runAction('conv-save', '', null);
-    api.runAction('conv-hist-clear', '', null);
+    // 缺联系电话应拒绝
+    const before = api.S.consign.length;
+    api.setVal('cs-title', '缺电话'); api.setVal('cs-price', '10'); api.setVal('cs-contact', '');
+    api.runAction('consign-submit', '', null);
+    check('3.4 缺联系电话被拒绝', api.S.consign.length === before);
+
+    // 未审核(pending)不应出现在客户在售列表
+    const onSale = api.S.consign.filter(c => c.status === 'on').length;
+    check('3.5 待审核物品不进入客户在售列表', onSale === 0);
+
+    // 管理员审核上架
+    api.go('#/admin?tab=consign'); api.render();
+    api.runAction('consign-approve', api.S.consign[0].id, null);
+    check('3.6 管理员上架后状态变为 on', api.S.consign[0].status === 'on');
+
+    // 客户在售列表现在能看到
+    api.go('#/consign'); api.render();
+    check('3.7 上架后客户页在售列表显示该物品', api.appHtml().includes('九成新自行车'));
+
+    // 客户按电话查询自己的寄售
+    api.setVal('cs-query', '1234567');
+    api.runAction('consign-query', '', null);
+    check('3.8 按联系电话查询到寄售记录', api.CS.results && api.CS.results.length === 1);
+
+    // 管理员标记售出
+    api.go('#/admin?tab=consign'); api.render();
+    api.runAction('consign-mark-sold', api.S.consign[0].id, null);
+    check('3.9 标记售出后状态变为 sold 且记录售出时间', api.S.consign[0].status === 'sold' && !!api.S.consign[0].soldTime);
+
+    // 售出后不再出现在客户在售列表
+    api.go('#/consign'); api.render();
+    check('3.10 售出物品不再出现在客户在售列表', !/九成新自行车/.test(api.appHtml().match(/在售[\s\S]*?我要寄售/)?.[0] || ''));
+
+    // 删除
+    api.go('#/admin?tab=consign'); api.render();
+    api.runAction('consign-del', api.S.consign[0].id, null);
     api.runAction('confirm-ok', '', null);
-    check('3.10 清空历史生效', api.S.convHistory.length === 0);
-  }
-  {
-    // 断网 + 有缓存
-    const api = boot({
-      preload: { sm_rates: JSON.stringify({ base: 'PKR', rates: okRates('PKR'), updatedAt: new Date().toISOString() }) },
-      fetch: async () => { throw new Error('offline'); }
-    });
-    await api.fetchRates();
-    check('3.11 断网后 fresh=false', api.RATE_STATE.fresh === false);
-    api.go('#/rates'); api.render();
-    const html = api.converterCard();
-    check('3.12 断网可换算（select 无 disabled）', !/<select[^>]*disabled/.test(html));
-    check('3.13 红色卡片样式 conv-offline-card', html.includes('conv-offline-card'));
-    check('3.14 红色文字标注 未联网 · 非在线汇率', html.includes('未联网 · 非在线汇率'));
-    check('3.15 红色提示条 conv-offnote', html.includes('conv-offnote'));
-    check('3.16 失败后退避 lastFail 已记录', api.RATE_STATE.lastFail > 0);
+    check('3.11 删除寄售记录后归零', api.S.consign.length === 0);
 
-    const api2 = boot({ fetch: async () => { throw new Error('offline'); } });
-    await api2.fetchRates();
-    api2.go('#/rates'); api2.render();
-    check('3.17 无缓存时换算控件禁用', /<select[^>]*disabled/.test(api2.converterCard()));
+    // 持久化键
+    check('3.12 寄售数据持久化到 sm_consign', !!api.store['sm_consign']);
   }
 
   // ===== 阶段4 管理模式 =====
@@ -333,14 +337,20 @@ async function main() {
     check('4.9 删除未占用分类生效', api.S.settings.categories.length === catCount);
   }
   {
-    // 汇率设置
+    // 寄售管理：筛选
     const api = boot();
-    await api.doRefresh(true);
-    api.setVal('rt-base', 'USD');
-    api.setQSAll(() => [{ value: 'USD' }, { value: 'EUR' }]);
-    api.runAction('rates-save', '', null);
-    check('4.10 修改基准货币为 USD 并持久化', JSON.parse(api.store['sm_settings']).baseCurrency === 'USD');
-    check('4.11 显示币种勾选持久化', JSON.parse(api.store['sm_settings']).showCurrencies.includes('USD'));
+    api.S.consign = [
+      { id: 'g1', title: 'A', price: 10, contact: '1', status: 'pending', createTime: '2026-01-01' },
+      { id: 'g2', title: 'B', price: 20, contact: '2', status: 'on', createTime: '2026-01-02' },
+      { id: 'g3', title: 'C', price: 30, contact: '3', status: 'sold', createTime: '2026-01-03' }
+    ];
+    api.saveConsign();
+    api.setVal('login-pass', '123456');
+    api.runAction('login-submit', '', null);
+    api.go('#/admin?tab=consign'); api.render();
+    check('4.10 管理后台寄售页可打开', api.appHtml().includes('g1') || api.appHtml().includes('A'));
+    api.runAction('consign-filter', 'pending', null);
+    check('4.11 寄售管理按待审核筛选生效', api.CSM.filter === 'pending' && api.S.consign.filter(c=>c.status==='pending').length === 1);
   }
   {
     // 备份导出 / 导入恢复
@@ -349,21 +359,23 @@ async function main() {
     api.saveProducts();
     api.S.parcels = [{ id: 'q1', trackingNo: 'SF999', shelf: 'B1', arrivalTime: '2026-01-01T00:00', status: 'pending', pickTime: null }];
     api.saveParcels();
+    api.S.consign = [{ id: 'g1', title: '寄售物', price: 100, contact: '123', status: 'on', createTime: '2026-01-01' }];
+    api.saveConsign();
     api.exportData();
     check('4.12 导出不抛错（生成备份包）', true);
     const backup = {
       version: 1, exportedAt: '2026-09-21T00:00:00Z',
-      settings: api.S.settings, products: api.S.products, parcels: api.S.parcels,
-      rates: api.S.rates, convHistory: api.S.convHistory
+      settings: api.S.settings, products: api.S.products, parcels: api.S.parcels, consign: api.S.consign
     };
     const api2 = boot();
     await api2.importData({ _content: JSON.stringify(backup) });
     check('4.13 导入后商品恢复', api2.S.products.length === 1 && api2.S.products[0].nameZh === '测试');
     check('4.14 导入后快递恢复', api2.S.parcels.length === 1 && api2.S.parcels[0].trackingNo === 'SF999');
+    check('4.15 导入后寄售恢复', api2.S.consign.length === 1 && api2.S.consign[0].title === '寄售物');
     const bad = boot();
     let threw = false;
     try { await bad.importData({ _content: 'not-json{{{' }); } catch (e) { threw = true; }
-    check('4.15 非法备份文件报错且不破坏数据', threw || bad.S.products.length >= 0);
+    check('4.16 非法备份文件报错且不破坏数据', threw || bad.S.products.length >= 0);
   }
 
   // ===== 阶段5 持久化 =====

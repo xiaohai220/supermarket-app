@@ -336,25 +336,6 @@ const ICONS = {
   banknote:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>'
 };
 
-/* ===== 货币信息 ===== */
-const CUR_ORDER = ['USD','EUR','GBP','JPY','CNY','HKD','TWD','KRW','SGD','MYR','THB','IDR','PHP','VND','INR','PKR','BDT','LKR','NPR','AED','SAR','QAR','KWD','BHD','OMR','TRY','RUB','CAD','AUD','NZD','CHF','SEK','NOK','DKK','ZAR','EGP','BRL','MXN','ILS'];
-const CURRENCIES = {
-  USD:{zh:'美元',en:'US Dollar'}, EUR:{zh:'欧元',en:'Euro'}, GBP:{zh:'英镑',en:'British Pound'},
-  JPY:{zh:'日元',en:'Japanese Yen'}, CNY:{zh:'人民币',en:'Chinese Yuan'}, HKD:{zh:'港币',en:'Hong Kong Dollar'},
-  TWD:{zh:'新台币',en:'New Taiwan Dollar'}, KRW:{zh:'韩元',en:'South Korean Won'}, SGD:{zh:'新加坡元',en:'Singapore Dollar'},
-  MYR:{zh:'马来西亚林吉特',en:'Malaysian Ringgit'}, THB:{zh:'泰铢',en:'Thai Baht'}, IDR:{zh:'印尼盾',en:'Indonesian Rupiah'},
-  PHP:{zh:'菲律宾比索',en:'Philippine Peso'}, VND:{zh:'越南盾',en:'Vietnamese Dong'}, INR:{zh:'印度卢比',en:'Indian Rupee'},
-  PKR:{zh:'巴基斯坦卢比',en:'Pakistani Rupee'}, BDT:{zh:'孟加拉塔卡',en:'Bangladeshi Taka'}, LKR:{zh:'斯里兰卡卢比',en:'Sri Lankan Rupee'},
-  NPR:{zh:'尼泊尔卢比',en:'Nepalese Rupee'}, AED:{zh:'阿联酋迪拉姆',en:'UAE Dirham'}, SAR:{zh:'沙特里亚尔',en:'Saudi Riyal'},
-  QAR:{zh:'卡塔尔里亚尔',en:'Qatari Riyal'}, KWD:{zh:'科威特第纳尔',en:'Kuwaiti Dinar'}, BHD:{zh:'巴林第纳尔',en:'Bahraini Dinar'},
-  OMR:{zh:'阿曼里亚尔',en:'Omani Rial'}, TRY:{zh:'土耳其里拉',en:'Turkish Lira'}, RUB:{zh:'俄罗斯卢布',en:'Russian Ruble'},
-  CAD:{zh:'加元',en:'Canadian Dollar'}, AUD:{zh:'澳元',en:'Australian Dollar'}, NZD:{zh:'新西兰元',en:'New Zealand Dollar'},
-  CHF:{zh:'瑞士法郎',en:'Swiss Franc'}, SEK:{zh:'瑞典克朗',en:'Swedish Krona'}, NOK:{zh:'挪威克朗',en:'Norwegian Krone'},
-  DKK:{zh:'丹麦克朗',en:'Danish Krone'}, ZAR:{zh:'南非兰特',en:'South African Rand'}, EGP:{zh:'埃及镑',en:'Egyptian Pound'},
-  BRL:{zh:'巴西雷亚尔',en:'Brazilian Real'}, MXN:{zh:'墨西哥比索',en:'Mexican Peso'}, ILS:{zh:'以色列新谢克尔',en:'Israeli New Shekel'}
-};
-function curName(code){ const c=CURRENCIES[code]; return c ? (lang==='zh'?c.zh:c.en) : code; }
-
 /* ===== 多语言文案 ===== */
 const I18N = {
   zh:{
@@ -364,9 +345,8 @@ const I18N = {
     openModule:'进入',
     modProducts:'商品展示', modProductsDesc:'浏览店内商品，按分类查找、搜索名称、查看价格与库存',
     modParcels:'快递查询', modParcelsDesc:'输入快递运单号，查询您的快递是否已被取走',
-    modRates:'货币汇率', modRatesDesc:'查看国际货币最新汇率，联网自动更新，离线可看上次数据',
-    statProducts:'件商品', statPending:'件待取',
-    ratesMeta:'汇率更新于',
+    modConsign:'二手寄售', modConsignDesc:'浏览店内二手寄售物品，或提交您的物品申请寄售',
+    statProducts:'件商品', statPending:'件待取', statOnSale:'件在售',
     productsTitle:'商品展示', searchPlaceholder:'搜索商品名称…', allCats:'全部',
     sortDefault:'默认排序', sortPriceAsc:'价格从低到高', sortPriceDesc:'价格从高到低',
     inStock:'有货', outOfStock:'缺货', noImage:'暂无图片',
@@ -377,27 +357,25 @@ const I18N = {
     arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
     notFoundTitle:'未找到该运单', notFoundDesc:'请核对运单号是否输入正确，或到服务台咨询工作人员。',
     resultFound:'查询结果',
-    ratesTitle:'货币汇率', baseCurrency:'基准货币', lastUpdate:'更新于',
-    refreshNow:'刷新汇率', refreshing:'正在获取最新汇率…', updateOk:'汇率已更新',
-    updateFail:'获取失败，当前显示上次缓存数据', cachedHint:'当前显示最近一次成功获取的汇率',
-    disclaimer:'汇率仅供参考，实际交易请以银行或兑换机构为准', source:'数据来源',
-    ratesEmpty:'暂无汇率数据，请点击「刷新汇率」获取', ratesEmptyNote:'需要联网获取；无网络时无法更新',
-    converterTitle:'自定义换汇', fromLabel:'从（原币种）', toLabel:'换（目标币种）', amountLabel:'金额',
-    swap:'互换币种', convHint:'获取到汇率后即可换算', noRate:'该币种暂无汇率数据',
-    convNote:'按当前展示汇率换算，结果仅供参考',
-    convLoading:'正在联网获取最新汇率…',
-    convOffline:'未联网 · 非在线汇率',
-    convOfflineDesc:'以下换算结果基于未联网的缓存汇率，仅供参考；联网刷新后可获得最新汇率。',
-    convOnline:'已使用最新在线汇率', listCached:'列表为缓存数据，仅供参考',
-    historyTitle:'换算历史', saveRecord:'记录本次换算', noHistory:'暂无记录',
-    histClear:'清空记录', histSaved:'已记录', confirmClear:'确定清空所有换算记录吗？',
+    consignTitle:'二手寄售', consignSubtitle:'店内二手物品寄售',
+    onSaleTitle:'在售物品', consignEmpty:'暂无在售物品',
+    consignEmptyDesc:'店员审核上架后会显示在这里',
+    consignFormTitle:'我要寄售', consignTitleLabel:'物品名称 *', consignDescLabel:'物品描述 / 成色',
+    consignPriceLabel:'期望价格 *', consignContactLabel:'联系电话 *', consignorLabel:'您的称呼（选填）',
+    consignPhotoLabel:'物品图片（选填）', consignSubmit:'提交寄售申请',
+    consignSubmitted:'已提交，等待店员审核上架',
+    consignQueryTitle:'查询我的寄售', consignQueryPlaceholder:'输入您提交时留的联系电话', consignQueryBtn:'查询',
+    consignStatusPending:'待审核', consignStatusOn:'在售中', consignStatusSold:'已售出',
+    consignRequireTitle:'请填写物品名称', consignRequirePrice:'请填写正确的价格', consignRequireContact:'请填写联系电话',
+    consignNoResult:'未找到该联系电话的寄售记录', consignSubmitTime:'提交时间', consignContact:'联系电话', consignConsignor:'寄售人',
+    consignPriceUnit:'价格',
     adminTitle:'管理模式', adminDesc:'本机维护入口，客户界面不显示',
     loginTitle:'输入管理口令', loginBtn:'进入', wrongPassword:'口令不正确',
     passPlaceholder:'请输入口令', defaultPassHint:'初始口令：123456（进入后可在「系统设置」中修改）',
     cancel:'取消', confirm:'确定', save:'保存', delete:'删除', edit:'编辑', add:'新增', close:'关闭',
     saved:'已保存', deleted:'已删除', storageError:'保存失败：本地存储空间不足，请删除部分商品图片后重试',
     confirmDelete:'确定要删除吗？此操作不可恢复。',
-    tabProducts:'商品管理', tabParcels:'快递管理', tabRates:'汇率设置', tabSettings:'系统设置',
+    tabProducts:'商品管理', tabParcels:'快递管理', tabConsign:'寄售管理', tabSettings:'系统设置',
     addProduct:'新增商品', editProduct:'编辑商品', nameZh:'名称（中文）', nameEn:'名称（英文）',
     category:'分类', price:'价格', unit:'单位', unitPlaceholder:'如：500g / 个 / 瓶',
     stock:'库存状态', image:'商品图片', chooseImage:'选择图片', removeImage:'移除图片',
@@ -407,9 +385,9 @@ const I18N = {
     parcelList:'快递列表', parcelCount:'共 {n} 件 · 待取 {p} 件',
     filterAll:'全部', markPicked:'标记已取走', undoPick:'撤销标记', noParcels:'暂无快递记录',
     requireTracking:'请填写运单号', dupTracking:'该运单号已登记', parcelAdded:'已登记', parcelUpdated:'已更新',
-    baseCurrencyLabel:'基准货币', baseCurrencyDesc:'汇率以该货币为基准展示（商品价格也以此货币显示）',
-    showCurrencies:'显示哪些货币', saveRates:'保存汇率设置', ratesSaved:'汇率设置已保存',
-    cachedAt:'最近一次成功获取：', ratesNote:'客户打开「货币汇率」页面时会自动联网刷新；无网络时显示最近一次数据。',
+    consignPending:'待审核', consignOn:'在售', consignSold:'已售出',
+    consignApprove:'上架', consignMarkSold:'标记售出', consignListEmpty:'暂无寄售记录',
+    consignFilterAll:'全部', consignPriceHint:'客户提交的期望价格，上架后客户可见',
     storeName:'超市名称', storeNameZh:'名称（中文）', storeNameEn:'名称（英文）',
     adminPass:'管理口令', newPass:'新口令', confirmPass:'确认新口令', changePass:'修改口令',
     passChanged:'口令已修改', passMismatch:'两次输入的口令不一致', passTooShort:'口令至少 4 位',
@@ -428,9 +406,8 @@ const I18N = {
     openModule:'Open',
     modProducts:'Products', modProductsDesc:'Browse in-store items: search, categories, prices and stock',
     modParcels:'Parcel Pickup', modParcelsDesc:'Enter your tracking number to check if the parcel has been picked up',
-    modRates:'Exchange Rates', modRatesDesc:'Live international exchange rates, auto-updated online, cached for offline',
-    statProducts:'items', statPending:'waiting',
-    ratesMeta:'Rates updated',
+    modConsign:'Second-hand', modConsignDesc:'Browse consigned second-hand items, or submit your own item to consign',
+    statProducts:'items', statPending:'waiting', statOnSale:'on sale',
     productsTitle:'Products', searchPlaceholder:'Search product name…', allCats:'All',
     sortDefault:'Default', sortPriceAsc:'Price: low to high', sortPriceDesc:'Price: high to low',
     inStock:'In stock', outOfStock:'Out of stock', noImage:'No image',
@@ -441,27 +418,25 @@ const I18N = {
     arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
     notFoundTitle:'Tracking number not found', notFoundDesc:'Please check the number, or ask our staff at the service counter.',
     resultFound:'Result',
-    ratesTitle:'Exchange Rates', baseCurrency:'Base currency', lastUpdate:'Updated',
-    refreshNow:'Refresh', refreshing:'Fetching latest rates…', updateOk:'Rates updated',
-    updateFail:'Fetch failed, showing last cached rates', cachedHint:'Showing the most recent successful fetch',
-    disclaimer:'Rates are for reference only; actual trading rates may vary', source:'Source',
-    ratesEmpty:'No rate data yet, tap "Refresh" to fetch', ratesEmptyNote:'Requires internet; cannot update offline',
-    converterTitle:'Currency Converter', fromLabel:'From', toLabel:'To', amountLabel:'Amount',
-    swap:'Swap', convHint:'Available once rates are loaded', noRate:'No rate for this currency',
-    convNote:'Converted at the rates shown above, for reference only',
-    convLoading:'Fetching latest rates online…',
-    convOffline:'Offline · Not live rates',
-    convOfflineDesc:'This conversion is based on cached (offline) rates, for reference only. Refresh online for the latest rates.',
-    convOnline:'Using latest online rates', listCached:'List shows cached data, for reference only',
-    historyTitle:'Conversion History', saveRecord:'Save this conversion', noHistory:'No records yet',
-    histClear:'Clear all', histSaved:'Recorded', confirmClear:'Clear all conversion records?',
+    consignTitle:'Second-hand Consignment', consignSubtitle:'Store second-hand consignment',
+    onSaleTitle:'On sale', consignEmpty:'No items on sale',
+    consignEmptyDesc:'Items appear here after staff approve them',
+    consignFormTitle:'Consign an item', consignTitleLabel:'Item name *', consignDescLabel:'Description / condition',
+    consignPriceLabel:'Asking price *', consignContactLabel:'Contact phone *', consignorLabel:'Your name (optional)',
+    consignPhotoLabel:'Photo (optional)', consignSubmit:'Submit consignment request',
+    consignSubmitted:'Submitted, waiting for staff approval',
+    consignQueryTitle:'Check my consignment', consignQueryPlaceholder:'Enter the contact phone you submitted', consignQueryBtn:'Check',
+    consignStatusPending:'Pending review', consignStatusOn:'On sale', consignStatusSold:'Sold',
+    consignRequireTitle:'Please enter an item name', consignRequirePrice:'Please enter a valid price', consignRequireContact:'Please enter a contact phone',
+    consignNoResult:'No consignment found for this phone number', consignSubmitTime:'Submitted', consignContact:'Phone', consignConsignor:'Consignor',
+    consignPriceUnit:'Price',
     adminTitle:'Staff Mode', adminDesc:'Local maintenance, hidden from customers',
     loginTitle:'Enter staff password', loginBtn:'Enter', wrongPassword:'Incorrect password',
     passPlaceholder:'Enter password', defaultPassHint:'Default password: 123456 (change it in "Settings")',
     cancel:'Cancel', confirm:'OK', save:'Save', delete:'Delete', edit:'Edit', add:'Add', close:'Close',
     saved:'Saved', deleted:'Deleted', storageError:'Save failed: local storage is full. Remove some product images and retry.',
     confirmDelete:'Delete this item? This cannot be undone.',
-    tabProducts:'Products', tabParcels:'Parcels', tabRates:'Rates', tabSettings:'Settings',
+    tabProducts:'Products', tabParcels:'Parcels', tabConsign:'Consignment', tabSettings:'Settings',
     addProduct:'Add product', editProduct:'Edit product', nameZh:'Name (Chinese)', nameEn:'Name (English)',
     category:'Category', price:'Price', unit:'Unit', unitPlaceholder:'e.g. 500g / each / bottle',
     stock:'Stock', image:'Product image', chooseImage:'Choose image', removeImage:'Remove image',
@@ -471,9 +446,9 @@ const I18N = {
     parcelList:'Parcel list', parcelCount:'{n} total · {p} waiting',
     filterAll:'All', markPicked:'Mark picked up', undoPick:'Undo', noParcels:'No parcels yet',
     requireTracking:'Please enter a tracking number', dupTracking:'This tracking number already exists', parcelAdded:'Registered', parcelUpdated:'Updated',
-    baseCurrencyLabel:'Base currency', baseCurrencyDesc:'Rates are shown in this currency (product prices use it too)',
-    showCurrencies:'Currencies to display', saveRates:'Save rate settings', ratesSaved:'Rate settings saved',
-    cachedAt:'Last successful fetch: ', ratesNote:'The Rates page auto-refreshes online; without internet it shows the last cached data.',
+    consignPending:'Pending review', consignOn:'On sale', consignSold:'Sold',
+    consignApprove:'Approve', consignMarkSold:'Mark sold', consignListEmpty:'No consignment records',
+    consignFilterAll:'All', consignPriceHint:'Customer asking price, visible to customers after approval',
     storeName:'Store name', storeNameZh:'Name (Chinese)', storeNameEn:'Name (English)',
     adminPass:'Staff password', newPass:'New password', confirmPass:'Confirm new password', changePass:'Change password',
     passChanged:'Password changed', passMismatch:'The two passwords do not match', passTooShort:'Password must be at least 4 characters',
@@ -495,8 +470,8 @@ const LS = {
   get(k, def){ try{ const v = localStorage.getItem(k); return v===null ? def : JSON.parse(v); }catch(e){ return def; } },
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 };
-const KEYS = { settings:'sm_settings', products:'sm_products', parcels:'sm_parcels', rates:'sm_rates', convHistory:'sm_conv_history' };
-const S = { settings:null, products:[], parcels:[], rates:null, convHistory:[] };
+const KEYS = { settings:'sm_settings', products:'sm_products', parcels:'sm_parcels', consign:'sm_consign' };
+const S = { settings:null, products:[], parcels:[], consign:[] };
 
 function defaultSettings(){
   return {
@@ -504,7 +479,6 @@ function defaultSettings(){
     theme:'night',
     adminPass:'123456',
     baseCurrency:'PKR',
-    showCurrencies:['USD','EUR','GBP','JPY','CNY','AED','SAR','INR','CAD','AUD','CHF','SGD','MYR','THB','KRW'],
     storeNameZh:'社区超市',
     storeNameEn:'Community Supermarket',
     categories:[
@@ -521,15 +495,13 @@ function load(){
   if(!S.settings || typeof S.settings !== 'object' || !Array.isArray(S.settings.categories)){ S.settings = defaultSettings(); LS.set(KEYS.settings, S.settings); }
   S.products = LS.get(KEYS.products, []); if(!Array.isArray(S.products)) S.products=[];
   S.parcels  = LS.get(KEYS.parcels, []);  if(!Array.isArray(S.parcels)) S.parcels=[];
-  S.rates    = LS.get(KEYS.rates, null);
-  S.convHistory = LS.get(KEYS.convHistory, []); if(!Array.isArray(S.convHistory)) S.convHistory=[];
+  S.consign = LS.get(KEYS.consign, []); if(!Array.isArray(S.consign)) S.consign=[];
   lang = (S.settings.lang==='en') ? 'en' : 'zh';
 }
 function saveSettings(){ return LS.set(KEYS.settings, S.settings); }
 function saveProducts(){ return LS.set(KEYS.products, S.products); }
 function saveParcels(){ return LS.set(KEYS.parcels, S.parcels); }
-function saveRatesCache(){ return LS.set(KEYS.rates, S.rates); }
-function saveConvHistory(){ return LS.set(KEYS.convHistory, S.convHistory); }
+function saveConsign(){ return LS.set(KEYS.consign, S.consign); }
 
 /* ===== 工具函数 ===== */
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -537,8 +509,6 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 function p2(n){ return String(n).padStart(2,'0'); }
 function fmtDT(iso){ if(!iso) return '—'; const d=new Date(iso); if(isNaN(d)) return '—'; return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes()); }
 function fmtMoney(n){ n = Number(n)||0; return n.toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
-function fmtRate(n){ if(n>=100) return n.toLocaleString('en-US',{maximumFractionDigits:2}); if(n>=1) return n.toLocaleString('en-US',{maximumFractionDigits:3}); return n.toLocaleString('en-US',{maximumFractionDigits:4}); }
-function fmtConv(n){ n=Number(n)||0; const abs=Math.abs(n); const d = abs>=100?2 : abs>=1?3 : abs>=0.01?4 : 6; return n.toLocaleString('en-US',{minimumFractionDigits:d, maximumFractionDigits:d}); }
 function nowLocalInput(){ const d=new Date(); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes()); }
 function todayLine(){
   const d=new Date();
@@ -588,129 +558,29 @@ function readImage(file, cb){
   reader.readAsDataURL(file);
 }
 
-/* ===== 汇率获取 ===== */
-const RATE_STATE = { loading:false, fresh:false, lastFail:0 };
-async function fetchRates(){
-  const base = S.settings.baseCurrency || 'PKR';
-  const url = 'https://open.er-api.com/v6/latest/' + encodeURIComponent(base);
-  const ctrl = new AbortController();
-  const timer = setTimeout(()=>ctrl.abort(), 12000);
-  try{
-    const res = await fetch(url, {signal:ctrl.signal});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    if(!data || data.result!=='success' || !data.rates) throw new Error('bad data');
-    S.rates = { base:base, rates:data.rates, updatedAt:new Date().toISOString() };
-    saveRatesCache();
-    RATE_STATE.fresh = true;
-    RATE_STATE.lastFail = 0;
-    return {ok:true};
-  }catch(err){
-    RATE_STATE.fresh = false;
-    RATE_STATE.lastFail = Date.now();
-    return {ok:false, err:String(err && err.message || err)};
-  }finally{
-    clearTimeout(timer);
-  }
-}
-async function doRefresh(manual){
-  if(RATE_STATE.loading) return;
-  RATE_STATE.loading = true;
-  render();
-  const r = await fetchRates();
-  RATE_STATE.loading = false;
-  if(r.ok){ if(manual) toast(t('updateOk')); }
-  else { toast(t('updateFail')); }
-  render();
-}
+/* ===== 二手寄售：客户视图状态 ===== */
+const CS = { query:'', queried:false, results:null };  // 客户"查询我的寄售"
+let FORM_CONSIGN_IMG = '';
 
-/* ===== 自定义换汇 ===== */
-function convCodeList(){
-  const st = S.settings;
-  const set = new Set([st.baseCurrency || 'PKR', ...(st.showCurrencies || [])]);
-  const list = CUR_ORDER.filter(c=>set.has(c));
-  return list.length ? list : ['PKR','USD'];
+function consignStatusBadge(st){
+  if(st==='on')   return '<span class="badge b-ok">'+esc(t('consignStatusOn'))+'</span>';
+  if(st==='sold') return '<span class="badge b-done">'+esc(t('consignStatusSold'))+'</span>';
+  return '<span class="badge b-wait">'+esc(t('consignStatusPending'))+'</span>';
 }
-function computeConvHtml(amount, from, to){
-  if(!S.rates || !S.rates.rates) return '<span class="conv-none">'+esc(t('convHint'))+'</span>';
-  const rf = S.rates.rates[from], rt = S.rates.rates[to];
-  if(rf===undefined || rt===undefined) return '<span class="conv-none">'+esc(t('noRate'))+'</span>';
-  const rate = rt/rf;
-  const conv = amount*rate;
-  return '<div class="conv-line1"><span class="dim">'+esc(fmtConv(amount))+' '+esc(from)+' =</span> <b>'+esc(fmtConv(conv))+' '+esc(to)+'</b></div>'+
-         '<div class="conv-line2">1 '+esc(from)+' = '+esc(fmtRate(rate))+' '+esc(to)+'</div>';
-}
-function updateConvResult(){
-  const el = document.getElementById('conv-result');
-  if(!el) return;
-  const amountEl = document.getElementById('cv-amount');
-  const fromEl = document.getElementById('cv-from');
-  const toEl = document.getElementById('cv-to');
-  if(!amountEl || !fromEl || !toEl) return;
-  CV.amount = amountEl.value;
-  CV.from = fromEl.value;
-  CV.to = toEl.value;
-  el.innerHTML = computeConvHtml(parseFloat(amountEl.value)||0, CV.from, CV.to);
-}
-function converterCard(){
-  const st = S.settings;
-  const base = st.baseCurrency || 'PKR';
-  const codes = convCodeList();
-  if(!CV.from || !codes.includes(CV.from)) CV.from = codes.includes('USD') ? 'USD' : codes[0];
-  if(!CV.to || !codes.includes(CV.to)) CV.to = base;
-  if(CV.from===CV.to && codes.length>1) CV.to = codes.find(c=>c!==CV.from) || base;
-  const opts = (sel)=>codes.map(c=>'<option value="'+esc(c)+'" '+(c===sel?'selected':'')+'>'+esc(c)+' - '+esc(curName(c))+'</option>').join('');
-  const cacheOk = S.rates && S.rates.base===base;
-  const fresh = cacheOk && RATE_STATE.fresh;
-  const disabled = cacheOk ? '' : 'disabled';
-  let statusNote, result;
-  const cardClass = (cacheOk && !fresh) ? ' conv-offline-card' : '';
-  if(!cacheOk){
-    statusNote = '<span class="conv-status warn">'+esc(RATE_STATE.loading?t('convLoading'):t('convHint'))+'</span>';
-    result = '<span class="conv-none">'+esc(RATE_STATE.loading?t('convLoading'):t('convHint'))+'</span>';
-  }else{
-    result = computeConvHtml(parseFloat(CV.amount)||0, CV.from, CV.to);
-    if(!fresh) result += '<div class="conv-offnote">'+esc(t('convOfflineDesc'))+'</div>';
-    if(RATE_STATE.loading){
-      statusNote = '<span class="conv-status loading">'+esc(t('convLoading'))+'</span>';
-    }else if(fresh){
-      statusNote = '<span class="conv-status ok">'+ICONS.check+' '+esc(t('convOnline'))+' · '+esc(t('lastUpdate'))+' <span class="num">'+esc(fmtDT(S.rates.updatedAt))+'</span></span>';
-    }else{
-      statusNote = '<span class="conv-status off">'+ICONS.info+' '+esc(t('convOffline'))+'</span>';
-    }
-  }
-  return '<div class="card conv-card'+cardClass+'">'+
-    '<div class="conv-head"><h3>'+esc(t('converterTitle'))+'</h3>'+statusNote+'</div>'+
-    '<div class="conv-grid">'+
-      '<div class="conv-side"><label>'+esc(t('amountLabel'))+'</label><input type="number" id="cv-amount" min="0" step="any" value="'+esc(CV.amount)+'" data-action="conv-amount" '+disabled+'></div>'+
-      '<div class="conv-side"><label>'+esc(t('fromLabel'))+'</label><select id="cv-from" data-action="conv-from" '+disabled+'>'+opts(CV.from)+'</select></div>'+
-      '<button class="icon-btn conv-swap" data-action="conv-swap" title="'+esc(t('swap'))+'" '+disabled+'>'+ICONS.exchange+'</button>'+
-      '<div class="conv-side"><label>'+esc(t('toLabel'))+'</label><select id="cv-to" data-action="conv-to" '+disabled+'>'+opts(CV.to)+'</select></div>'+
+function consignCardHtml(c, cur){
+  const img = c.photo ? '<img src="'+esc(c.photo)+'" alt="">' : '<span class="ph">'+ICONS.tag+'</span>';
+  const contactLine = c.contact ? '<div class="prow-sub">'+ICONS.info+' '+esc(c.contact)+(c.consignor?' · '+esc(c.consignor):'')+'</div>' : '';
+  return '<div class="prod-card">'+
+    '<div class="prod-img">'+img+'</div>'+
+    '<div class="prod-body">'+
+      '<div class="prod-name">'+esc(c.title)+'</div>'+
+      (c.desc?'<div class="prod-cat">'+esc(c.desc)+'</div>':'')+
+      '<div class="prod-bottom">'+
+        '<span class="price-tag num"><span class="cur">'+esc(cur)+'</span>'+esc(fmtMoney(c.price))+'</span>'+
+        consignStatusBadge(c.status)+
+      '</div>'+
+      contactLine+
     '</div>'+
-    '<div class="conv-result num" id="conv-result">'+result+'</div>'+
-    (cacheOk ? '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-ghost btn-sm" data-action="conv-save">'+ICONS.plus+esc(t('saveRecord'))+'</button></div>' : '')+
-  '</div>';
-}
-function historyCard(){
-  let inner;
-  if(!S.convHistory.length){
-    inner = '<div class="hist-empty">'+esc(t('noHistory'))+'</div>';
-  }else{
-    inner = S.convHistory.map(h=>{
-      return '<div class="hist-row">'+
-        '<div class="hist-info">'+
-          '<div class="hist-main num">'+esc(fmtConv(h.amount))+' '+esc(h.from)+' = <b>'+esc(fmtConv(h.result))+' '+esc(h.to)+'</b></div>'+
-          '<div class="hist-sub num">1 '+esc(h.from)+' = '+esc(fmtRate(h.rate))+' '+esc(h.to)+' · '+esc(fmtDT(h.time))+'</div>'+
-        '</div>'+
-        '<button class="icon-btn" data-action="conv-hist-del" data-id="'+esc(h.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
-      '</div>';
-    }).join('');
-  }
-  return '<div class="card conv-hist-card">'+
-    '<div class="conv-head"><h3>'+esc(t('historyTitle'))+'</h3>'+
-      (S.convHistory.length ? '<button class="btn btn-ghost btn-sm" data-action="conv-hist-clear">'+ICONS.trash+esc(t('histClear'))+'</button>' : '')+
-    '</div>'+
-    inner+
   '</div>';
 }
 
@@ -718,7 +588,6 @@ function historyCard(){
 const PS = { q:'', cat:'all', sort:'default' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
 const PA = { filter:'all', q:'' };                 // 快递管理
-const CV = { amount:'100', from:'USD', to:'PKR' };  // 自定义换汇
 let ADMIN_OK = false;
 let FORM_PRODUCT_ID = null;
 
@@ -747,7 +616,7 @@ function render(){
   switch(r.name){
     case 'products': html = viewProducts(); break;
     case 'parcels':  html = viewParcels(); break;
-    case 'rates':    html = viewRates(); break;
+    case 'consign':  html = viewConsign(); break;
     case 'admin':    html = viewAdmin((r.params.get('tab')||'products')); break;
     default:         html = viewHome();
   }
@@ -755,18 +624,7 @@ function render(){
   window.scrollTo(0,0);
   afterRender(r);
 }
-function afterRender(r){
-  if(r.name==='rates') afterRatesView();
-}
-function afterRatesView(){
-  const baseOk = S.rates && S.rates.base===S.settings.baseCurrency;
-  const stale = !S.rates || !baseOk || (Date.now() - new Date(S.rates.updatedAt).getTime() > 30*60*1000);
-  if(!RATE_STATE.fresh || stale){
-    if(!RATE_STATE.loading && (!RATE_STATE.lastFail || Date.now()-RATE_STATE.lastFail > 60000)){
-      doRefresh(false);
-    }
-  }
-}
+function afterRender(r){ /* 无自动联网任务 */ }
 
 /* ===== 顶栏（子页共用） ===== */
 function themeBtn(){
@@ -798,8 +656,7 @@ function moduleCard(id, color, icon, title, desc, stat){
 function viewHome(){
   const st = S.settings;
   const storeName = lang==='zh' ? st.storeNameZh : st.storeNameEn;
-  let rateLine = t('ratesEmpty');
-  if(S.rates && S.rates.updatedAt){ rateLine = t('ratesMeta')+' '+fmtDT(S.rates.updatedAt); }
+  const onSale = S.consign.filter(c=>c.status==='on').length;
   return '<header class="topbar">'+
       '<div>'+
         '<h1 class="brand">'+esc(storeName)+'</h1>'+
@@ -812,7 +669,7 @@ function viewHome(){
       '<div class="home-grid">'+
         moduleCard('products','green',ICONS.cart,t('modProducts'),t('modProductsDesc'),S.products.length+' '+t('statProducts'))+
         moduleCard('parcels','orange',ICONS.box,t('modParcels'),t('modParcelsDesc'),pendingCount()+' '+t('statPending'))+
-        moduleCard('rates','teal',ICONS.banknote,t('modRates'),t('modRatesDesc'),rateLine)+
+        moduleCard('consign','teal',ICONS.box,t('modConsign'),t('modConsignDesc'),onSale+' '+t('statOnSale'))+
       '</div>'+
     '</main>'+
     '<footer class="home-foot">'+
@@ -907,61 +764,70 @@ function viewParcels(){
 }
 
 /* ===== 货币汇率 ===== */
-function viewRates(){
-  const st = S.settings;
-  const base = st.baseCurrency || 'PKR';
-  const cacheOk = S.rates && S.rates.base===base;
-  let body='';
-  if(RATE_STATE.loading){
-    body += '<div class="loading-bar"></div><div class="hint-bar hint-green">'+esc(t('refreshing'))+'</div>';
-  }
-  if(!cacheOk){
-    body += '<div class="card card-pad empty" style="padding:40px 20px">'+
-      '<div class="e-ico">'+ICONS.banknote+'</div><h3>'+esc(t('ratesEmpty'))+'</h3><p>'+esc(t('ratesEmptyNote'))+'</p>'+
-      '<div style="margin-top:14px"><button class="btn btn-primary" data-action="rates-refresh">'+ICONS.refresh+esc(t('refreshNow'))+'</button></div>'+
-    '</div>';
+function viewConsign(){
+  const cur = S.settings.baseCurrency || 'PKR';
+  const onSale = S.consign.filter(c=>c.status==='on');
+  let grid;
+  if(!onSale.length){
+    grid = '<div class="empty"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('consignEmpty'))+'</h3><p>'+esc(t('consignEmptyDesc'))+'</p></div>';
   }else{
-    const codes = st.showCurrencies.filter(c=>c!==base);
-    const rows = codes.map(c=>{
-      const raw = S.rates.rates[c];
-      const v = (raw===undefined||raw===null||raw===0) ? undefined : 1/raw;
-      const val = (v===undefined) ? '<span style="color:var(--ink-3)">—</span>' : '<span class="big num">'+esc(fmtRate(v))+'</span>';
-      return '<div class="rate-row card">'+
-        '<div class="rate-code"><span class="c num">'+esc(c)+'</span><span class="rate-name">'+esc(curName(c))+'</span></div>'+
-        '<div class="rate-val num">1 '+esc(c)+' = '+val+' '+esc(base)+'</div>'+
-      '</div>';
-    }).join('');
-    body += rows || '<div class="empty"><h3>'+esc(t('ratesEmpty'))+'</h3></div>';
-    if(S.rates.updatedAt){
-      const online = RATE_STATE.fresh;
-      body += '<div class="hint-bar '+(online?'hint-green':'hint-red')+'">'+
-        (online ? ICONS.check+' ' : '')+esc(t('lastUpdate'))+'：<span class="num">'+esc(fmtDT(S.rates.updatedAt))+'</span>'+
-        (online ? ' · '+esc(t('convOnline')) : ' · '+esc(t('convOffline')))+
-      '</div>';
+    grid = '<div class="prod-grid">'+onSale.map(c=>consignCardHtml(c,cur)).join('')+'</div>';
+  }
+  // 查询我的寄售结果
+  let queryHtml = '';
+  if(CS.queried){
+    if(CS.results && CS.results.length){
+      queryHtml = '<div class="card admin-panel" style="margin-top:16px"><h3 style="margin-bottom:10px">'+esc(t('consignQueryTitle'))+'</h3>'+
+        CS.results.map(c=>'<div class="prow">'+
+          '<div class="prow-info">'+
+            '<div class="prow-name">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</div>'+
+            '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+(c.desc?' · '+esc(c.desc):'')+'</div>'+
+          '</div></div>').join('')+
+        '</div>';
+    }else{
+      queryHtml = '<div class="card p-result"><div class="empty" style="padding:20px 10px"><div class="e-ico">'+ICONS.search+'</div><h3>'+esc(t('consignNoResult'))+'</h3></div></div>';
     }
   }
-  return pageHead(t('ratesTitle'))+
-    '<div class="rates-head card">'+
-      '<div>'+
-        '<h2>'+esc(t('ratesTitle'))+'</h2>'+
-        '<div class="rates-meta">'+esc(t('baseCurrency'))+'：<b>'+esc(base)+'</b> '+esc(curName(base))+'</div>'+
+  const prev = FORM_CONSIGN_IMG ? '<img id="cs-prev" class="img-preview" src="'+esc(FORM_CONSIGN_IMG)+'" alt="">' : '<img id="cs-prev" class="img-preview" style="display:none" alt="">';
+  return pageHead(t('consignTitle'))+
+    '<h2 style="margin:4px 2px 12px">'+esc(t('onSaleTitle'))+'</h2>'+
+    grid+
+    '<div class="card card-pad" style="margin-top:18px">'+
+      '<h3 style="margin-bottom:14px">'+esc(t('consignFormTitle'))+'</h3>'+
+      '<input type="file" id="cs-file" accept="image/*" style="display:none">'+
+      '<div class="field"><label>'+esc(t('consignTitleLabel'))+'</label><input type="text" id="cs-title" data-enter="consign-submit"></div>'+
+      '<div class="field"><label>'+esc(t('consignDescLabel'))+'</label><input type="text" id="cs-desc"></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+        '<div class="field"><label>'+esc(t('consignPriceLabel'))+'</label><input type="number" id="cs-price" min="0" step="0.01"></div>'+
+        '<div class="field"><label>'+esc(t('consignContactLabel'))+'</label><input type="text" id="cs-contact" data-enter="consign-submit"></div>'+
       '</div>'+
-      '<button class="btn btn-primary" data-action="rates-refresh" '+(RATE_STATE.loading?'disabled':'')+'>'+ICONS.refresh+esc(t('refreshNow'))+'</button>'+
+      '<div class="field"><label>'+esc(t('consignorLabel'))+'</label><input type="text" id="cs-consignor"></div>'+
+      '<div class="field"><label>'+esc(t('consignPhotoLabel'))+'</label>'+prev+
+        '<div style="display:flex;gap:8px">'+
+          '<button class="btn btn-ghost btn-sm" data-action="consign-img-pick">'+ICONS.upload+esc(t('chooseImage'))+'</button>'+
+          '<button class="btn btn-ghost btn-sm" data-action="consign-img-clear" '+(FORM_CONSIGN_IMG?'':'style="display:none"')+'>'+esc(t('removeImage'))+'</button>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:10px"><button class="btn btn-primary" data-action="consign-submit">'+ICONS.plus+esc(t('consignSubmit'))+'</button></div>'+
     '</div>'+
-    converterCard()+
-    historyCard()+
-    body+
-    '<div class="rates-note">'+esc(t('disclaimer'))+' · '+esc(t('source'))+'：open.er-api.com</div>';
+    '<div class="card card-pad" style="margin-top:16px">'+
+      '<h3 style="margin-bottom:12px">'+esc(t('consignQueryTitle'))+'</h3>'+
+      '<div class="query-row">'+
+        '<div class="search-wrap">'+ICONS.search+'<input id="cs-query" data-enter="consign-query" placeholder="'+esc(t('consignQueryPlaceholder'))+'"></div>'+
+        '<button class="btn btn-primary" data-action="consign-query">'+ICONS.search+esc(t('consignQueryBtn'))+'</button>'+
+      '</div>'+
+      queryHtml+
+    '</div>';
 }
 
 /* ===== 管理模式 ===== */
 function viewAdmin(tab){
-  const tabs = [['products',t('tabProducts')],['parcels',t('tabParcels')],['rates',t('tabRates')],['settings',t('tabSettings')]]
+  const tabs = [['products',t('tabProducts')],['parcels',t('tabParcels')],['consign',t('tabConsign')],['settings',t('tabSettings')]]
     .map(x=>'<button class="tab '+(tab===x[0]?'on':'')+'" data-action="admin-tab" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
   let body='';
   if(tab==='products') body = adminProducts();
   else if(tab==='parcels') body = adminParcels();
-  else if(tab==='rates') body = adminRates();
+  else if(tab==='consign') body = adminConsign();
   else body = adminSettings();
   return pageHead(t('adminTitle'))+
     '<div class="tabs">'+tabs+'</div>'+
@@ -1119,40 +985,45 @@ function addParcelFromForm(){
   toast(t('parcelAdded'));
 }
 
-/* —— 汇率设置 —— */
-function adminRates(){
-  const st = S.settings;
-  const baseOpts = CUR_ORDER.map(c=>'<option value="'+esc(c)+'" '+(st.baseCurrency===c?'selected':'')+'>'+esc(c)+' - '+esc(curName(c))+'</option>').join('');
-  const curChecks = CUR_ORDER.map(c=>{
-    const on = st.showCurrencies.includes(c);
-    return '<label><input type="checkbox" class="rt-cur" value="'+esc(c)+'" '+(on?'checked':'')+'>'+esc(c)+' <span style="color:var(--ink-3);font-size:12px">'+esc(curName(c))+'</span></label>';
-  }).join('');
-  const cachedLine = (S.rates && S.rates.updatedAt) ? '<div class="hint-bar hint-green">'+esc(t('cachedAt'))+'<span class="num">'+esc(fmtDT(S.rates.updatedAt))+'</span></div>' : '';
-  return '<div class="admin-grid2">'+
-    '<div class="card card-pad">'+
-      '<h3 style="margin-bottom:10px">'+esc(t('baseCurrencyLabel'))+'</h3>'+
-      '<select id="rt-base">'+baseOpts+'</select>'+
-      '<div class="hint" style="font-size:12px;color:var(--ink-3);margin-top:6px">'+esc(t('baseCurrencyDesc'))+'</div>'+
-    '</div>'+
-    '<div class="card card-pad">'+
-      '<h3 style="margin-bottom:10px">'+esc(t('showCurrencies'))+'</h3>'+
-      '<div class="cur-grid">'+curChecks+'</div>'+
-    '</div>'+
-  '</div>'+
-  '<div class="card save-row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'+
-    '<button class="btn btn-primary" data-action="rates-save">'+esc(t('saveRates'))+'</button>'+
-    '<button class="btn btn-ghost" data-action="rates-refresh">'+ICONS.refresh+esc(t('refreshNow'))+'</button>'+
-  '</div>'+
-  '<div class="card card-pad">'+cachedLine+'<div class="hint" style="font-size:12px;color:var(--ink-3)">'+esc(t('ratesNote'))+'</div></div>';
-}
-function saveRatesFromForm(){
-  const base = document.getElementById('rt-base').value;
-  const checked = Array.from(document.querySelectorAll('.rt-cur:checked')).map(x=>x.value);
-  S.settings.baseCurrency = base;
-  S.settings.showCurrencies = checked.length ? checked : [base==='PKR'?'USD':'PKR'];
-  saveSettings();
-  render();
-  toast(t('ratesSaved'));
+/* —— 寄售管理 —— */
+const CSM = { filter:'all' };  // 管理端筛选
+function adminConsign(){
+  const cur = S.settings.baseCurrency || 'PKR';
+  const list = S.consign.slice().filter(c=>{
+    if(CSM.filter==='pending' && c.status!=='pending') return false;
+    if(CSM.filter==='on' && c.status!=='on') return false;
+    if(CSM.filter==='sold' && c.status!=='sold') return false;
+    return true;
+  }).sort((a,b)=>(b.createTime||'').localeCompare(a.createTime||''));
+  let rows;
+  if(!list.length){
+    rows = '<div class="empty" style="padding:30px 12px"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('consignListEmpty'))+'</h3></div>';
+  }else{
+    rows = list.map(c=>{
+      const img = c.photo ? '<img src="'+esc(c.photo)+'" alt="">' : '<span class="ph">'+ICONS.tag+'</span>';
+      let ops = '';
+      if(c.status==='pending') ops += '<button class="btn btn-primary btn-sm" data-action="consign-approve" data-id="'+esc(c.id)+'">'+ICONS.check+esc(t('consignApprove'))+'</button>';
+      else if(c.status==='on') ops += '<button class="btn btn-primary btn-sm" data-action="consign-mark-sold" data-id="'+esc(c.id)+'">'+ICONS.check+esc(t('consignMarkSold'))+'</button>';
+      ops += '<button class="icon-btn" data-action="consign-del" data-id="'+esc(c.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>';
+      return '<div class="prow">'+
+        '<div class="prow-thumb">'+img+'</div>'+
+        '<div class="prow-info">'+
+          '<div class="prow-name">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</div>'+
+          '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+
+            (c.desc?' · '+esc(c.desc):'')+'</div>'+
+          '<div class="prow-sub">'+esc(t('consignContact'))+'：'+esc(c.contact||'—')+(c.consignor?' · '+esc(t('consignConsignor'))+'：'+esc(c.consignor):'')+' · '+esc(t('consignSubmitTime'))+'：<span class="num">'+esc(fmtDT(c.createTime))+'</span>'+(c.soldTime?' · '+esc(t('consignStatusSold'))+'：<span class="num">'+esc(fmtDT(c.soldTime))+'</span>':'')+'</div>'+
+        '</div>'+
+        '<div class="prow-ops">'+ops+'</div>'+
+      '</div>';
+    }).join('');
+  }
+  const filters = [['all',t('consignFilterAll')],['pending',t('consignPending')],['on',t('consignOn')],['sold',t('consignSold')]]
+    .map(x=>'<button class="chip '+(CSM.filter===x[0]?'on':'')+'" data-action="consign-filter" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
+  return '<div class="card admin-panel">'+
+    '<div class="panel-head"><h3>'+esc(t('consignTitle'))+'</h3><span class="count num">'+esc(String(S.consign.length))+'</span></div>'+
+    '<div class="chips" style="margin-bottom:10px">'+filters+'</div>'+
+    rows+
+  '</div>';
 }
 
 /* —— 系统设置 —— */
@@ -1227,7 +1098,7 @@ function openLogin(){
 /* ===== 备份 ===== */
 function exportData(){
   const data = { app:'supermarket-customer-service', version:1, exportedAt:new Date().toISOString(),
-    settings:S.settings, products:S.products, parcels:S.parcels, rates:S.rates, convHistory:S.convHistory };
+    settings:S.settings, products:S.products, parcels:S.parcels, consign:S.consign };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1243,10 +1114,10 @@ function importData(file){
       const data = JSON.parse(reader.result);
       if(!data || typeof data!=='object' || !data.settings || !Array.isArray(data.products) || !Array.isArray(data.parcels)) throw new Error('bad');
       const merged = Object.assign({}, defaultSettings(), data.settings);
-      S.settings = merged; S.products = data.products; S.parcels = data.parcels; S.rates = data.rates || null;
-      S.convHistory = Array.isArray(data.convHistory) ? data.convHistory : [];
+      S.settings = merged; S.products = data.products; S.parcels = data.parcels;
+      S.consign = Array.isArray(data.consign) ? data.consign : [];
       lang = (merged.lang==='en')?'en':'zh';
-      saveSettings(); saveProducts(); saveParcels(); saveRatesCache(); saveConvHistory();
+      saveSettings(); saveProducts(); saveParcels(); saveConsign();
       render();
       toast(t('importSuccess'));
     }catch(e){
@@ -1300,30 +1171,48 @@ function runAction(action, id, el){
       render();
       break;
     }
-    /* 汇率 */
-    case 'rates-refresh': doRefresh(true); break;
-    case 'conv-swap': { const t=CV.from; CV.from=CV.to; CV.to=t; render(); break; }
-    case 'conv-save': {
-      if(!S.rates || S.rates.base!==S.settings.baseCurrency){ toast(t('convHint')); break; }
-      const rf = S.rates.rates[CV.from], rt = S.rates.rates[CV.to];
-      if(rf===undefined || rt===undefined){ toast(t('noRate')); break; }
-      const amount = parseFloat(CV.amount)||0;
-      const rate = rt/rf;
-      S.convHistory.unshift({id:uid(), amount:amount, from:CV.from, to:CV.to, rate:rate, result:amount*rate, time:new Date().toISOString()});
-      if(S.convHistory.length>50) S.convHistory = S.convHistory.slice(0,50);
-      saveConvHistory();
-      render();
-      toast(t('histSaved'));
+    /* 二手寄售（客户） */
+    case 'consign-submit': {
+      const title = (document.getElementById('cs-title')||{}).value||'';
+      const desc = (document.getElementById('cs-desc')||{}).value||'';
+      const price = parseFloat((document.getElementById('cs-price')||{}).value);
+      const contact = ((document.getElementById('cs-contact')||{}).value||'').trim();
+      const consignor = ((document.getElementById('cs-consignor')||{}).value||'').trim();
+      if(!title.trim()){ toast(t('consignRequireTitle')); break; }
+      if(isNaN(price) || price<0){ toast(t('consignRequirePrice')); break; }
+      if(!contact){ toast(t('consignRequireContact')); break; }
+      S.consign.push({ id:uid(), title:title.trim(), desc:desc.trim(), price:price, contact:contact, consignor:consignor, photo:FORM_CONSIGN_IMG, status:'pending', createTime:new Date().toISOString(), soldTime:null });
+      FORM_CONSIGN_IMG = '';
+      if(!saveConsign()){ toast(t('storageError')); break; }
+      toast(t('consignSubmitted'));
+      go('#/consign');
       break;
     }
-    case 'conv-hist-del':
-      S.convHistory = S.convHistory.filter(h=>h.id!==id);
-      saveConvHistory(); render(); toast(t('deleted'));
+    case 'consign-query': {
+      const v = (document.getElementById('cs-query')||{}).value||'';
+      const k = v.trim().toLowerCase();
+      CS.queried = true;
+      CS.query = v;
+      CS.results = k ? S.consign.filter(c=>(c.contact||'').toLowerCase().includes(k)) : [];
+      render();
       break;
-    case 'conv-hist-clear':
-      confirmDlg(t('confirmClear'), ()=>{
-        S.convHistory = [];
-        saveConvHistory(); render(); toast(t('deleted'));
+    }
+    case 'consign-img-pick': { const f=document.getElementById('cs-file'); if(f) f.click(); break; }
+    case 'consign-img-clear': FORM_CONSIGN_IMG=''; { const p=document.getElementById('cs-prev'); if(p){ p.style.display='none'; p.src=''; } const b=document.querySelector('[data-action="consign-img-clear"]'); if(b) b.style.display='none'; } break;
+    /* 寄售管理 */
+    case 'consign-filter': CSM.filter = id; render(); break;
+    case 'consign-approve': {
+      const c=S.consign.find(x=>x.id===id); if(c){ c.status='on'; saveConsign(); render(); }
+      break;
+    }
+    case 'consign-mark-sold': {
+      const c=S.consign.find(x=>x.id===id); if(c){ c.status='sold'; c.soldTime=new Date().toISOString(); saveConsign(); render(); }
+      break;
+    }
+    case 'consign-del':
+      confirmDlg(id, ()=>{
+        S.consign = S.consign.filter(c=>c.id!==id);
+        saveConsign(); render(); toast(t('deleted'));
       });
       break;
     /* 商品管理 */
@@ -1356,8 +1245,6 @@ function runAction(action, id, el){
       break;
     case 'parcel-filter': PA.filter = id; render(); break;
     case 'parcel-search': PA.q = document.getElementById('pa-search').value; render(); break;
-    /* 汇率设置 */
-    case 'rates-save': saveRatesFromForm(); break;
     /* 系统设置 */
     case 'settings-store-save': {
       const zh = document.getElementById('st-name-zh').value.trim();
@@ -1429,10 +1316,16 @@ document.addEventListener('change', e=>{
       if(b) b.style.display='inline-flex';
     });
     t.value='';
-  }else if(t.id==='cv-from'){
-    CV.from = t.value; updateConvResult();
-  }else if(t.id==='cv-to'){
-    CV.to = t.value; updateConvResult();
+  }else if(t.id==='cs-file'){
+    const f = t.files && t.files[0];
+    if(f) readImage(f, d=>{
+      FORM_CONSIGN_IMG = d;
+      const p = document.getElementById('cs-prev');
+      if(p){ p.src=d; p.style.display='block'; }
+      const b = document.querySelector('[data-action="consign-img-clear"]');
+      if(b) b.style.display='inline-flex';
+    });
+    t.value='';
   }else if(t.id==='imp-file'){
     const f = t.files && t.files[0];
     if(f) importData(f);
@@ -1452,7 +1345,6 @@ document.addEventListener('input', e=>{
     if(c) c.textContent = fmtCount(t('productsCount'),{n:list.length});
   }
   else if(act==='parcel-search'){ PA.q = t.value; render(); }
-  else if(act==='conv-amount'){ CV.amount = t.value; updateConvResult(); }
 });
 window.addEventListener('hashchange', render);
 
