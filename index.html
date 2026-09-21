@@ -177,6 +177,9 @@ body.night .barcode{opacity:.9}
 .badge.clickable:active{transform:scale(.96)}
 .pager{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:12px}
 .pager button[disabled]{opacity:.4;pointer-events:none}
+.date-row{display:flex;align-items:center;gap:8px}
+.date-label{font-size:13px;color:var(--ink-2);white-space:nowrap}
+.date-row input{padding:7px 10px;border:1px solid var(--line);border-radius:9px;font:inherit}
 
 /* ============ 空状态 ============ */
 .empty{padding:56px 20px;text-align:center;color:var(--ink-2)}
@@ -405,7 +408,7 @@ const I18N = {
     statusReview:'取件中', reviewTip:'已申请取件，等待店员确认', requestPickTip:'点击申请取件', requestBadge:'客户申请取件', requestSent:'已提交取件申请，等待店员确认', rejectRequest:'驳回申请', rejected:'已驳回申请', withdrawTip:'再次点击撤回取件申请', withdrawn:'已撤回取件申请', requestTime:'申请时间',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取件',
-    arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号', status:'状态',
+    arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号', status:'状态', arrivalDate:'按到店日期',
     notFoundTitle:'未找到该运单', notFoundDesc:'请核对运单号是否输入正确，或到服务台咨询工作人员。',
     resultFound:'查询结果',
     consignTitle:'二手寄售', consignSubtitle:'店内二手物品寄售',
@@ -473,7 +476,7 @@ const I18N = {
     statusReview:'Picking up', reviewTip:'Pickup requested, waiting for staff', requestPickTip:'Tap to request pickup', requestBadge:'Customer requested pickup', requestSent:'Pickup request sent, waiting for staff', rejectRequest:'Reject request', rejected:'Request rejected', withdrawTip:'Tap again to withdraw request', withdrawn:'Request withdrawn', requestTime:'Requested at',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
-    arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.', status:'Status',
+    arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.', status:'Status', arrivalDate:'By arrival date',
     notFoundTitle:'Tracking number not found', notFoundDesc:'Please check the number, or ask our staff at the service counter.',
     resultFound:'Result',
     consignTitle:'Second-hand Consignment', consignSubtitle:'Store second-hand consignment',
@@ -717,7 +720,7 @@ function consignCardHtml(c, cur){
 /* ===== 视图状态 ===== */
 const PS = { q:'', cat:'all', sort:'default' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
-const PL = { q:'', status:'all', page:1 }; // 客户快递列表筛选
+const PL = { q:'', status:'all', page:1, date:'' }; // 客户快递列表筛选
 const PA = { filter:'all', q:'', page:1 };                 // 快递管理
 const PAGE_SIZE = 10;
 let ADMIN_OK = false;
@@ -898,6 +901,11 @@ function publicParcelList(){
   let list = S.parcels.slice().sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
   const total = list.length;
   if(PL.status && PL.status!=='all') list = list.filter(p=>p.status===PL.status);
+  if(PL.date) list = list.filter(p=>{
+    const d = new Date(p.arrivalTime); if(isNaN(d)) return false;
+    const mm = p2(d.getMonth()+1), dd = p2(d.getDate());
+    return (d.getFullYear()+'-'+mm+'-'+dd) === PL.date;
+  });
   if(PL.q){
     const q = PL.q.trim().toLowerCase();
     list = list.filter(p=>{
@@ -948,6 +956,7 @@ function publicParcelList(){
     '<div class="panel-head"><h3>'+esc(t('parcelAll'))+'</h3><span class="count num">'+esc(String(list.length))+' / '+esc(String(total))+'</span></div>'+
     '<div class="search-wrap" style="margin-bottom:8px">'+ICONS.search+'<input id="plist-search" data-action="plist-search" placeholder="'+esc(t('plistPh'))+'" value="'+esc(PL.q)+'"></div>'+
     '<div class="chips" style="margin-bottom:10px">'+chips+'</div>'+
+    '<div class="date-row" style="margin-bottom:10px"><label class="date-label">'+esc(t('arrivalDate'))+'</label><input type="date" id="plist-date" value="'+esc(PL.date)+'"></div>'+
     '<div class="p2 p2-head">'+
       '<div class="p2-main"><div class="p2-h">'+esc(t('trackingNo'))+'</div></div>'+
       '<div class="p2-time p2-h">'+esc(t('arrivalTime'))+'</div>'+
@@ -1680,6 +1689,8 @@ document.addEventListener('change', e=>{
       if(b) b.style.display='inline-flex';
     });
     t.value='';
+  }else if(t.id==='plist-date'){
+    PL.date = t.value || ''; PL.page = 1; render();
   }else if(t.id==='imp-file'){
     const f = t.files && t.files[0];
     if(f) importData(f);
