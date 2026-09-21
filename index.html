@@ -61,6 +61,8 @@ a{color:var(--green)}
 .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:4px 0 14px}
 .brand{font-size:26px;font-weight:800;letter-spacing:.2px;color:#F6E7B8;text-shadow:0 2px 14px rgba(246,231,184,.25)}
 .brand-sub{color:rgba(255,255,255,.72);font-size:13px;margin-top:3px}
+.store-info{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:rgba(255,255,255,.85)}
+body.day .store-info{color:#3a4f44}
 .topbar-right{display:flex;gap:8px;flex-shrink:0}
 .barcode{height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,#F6E7B8 0 14px,rgba(255,255,255,.85) 14px 18px,rgba(255,255,255,.25) 18px 26px);margin-bottom:22px;opacity:.9}
 .page-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
@@ -815,6 +817,9 @@ function themeBtn(){
   const isNight = (S.settings.theme!=='day');
   return '<button class="icon-btn" data-action="toggle-theme" title="'+esc(isNight?'白天':'夜晚')+'">'+(isNight?ICONS.sun:ICONS.moon)+'</button>';
 }
+function storeInfoHtml(){
+  return '<div class="store-info"><span>📍 F7-1 37街3号</span><span>📞 03175333055 / 03119990792</span></div>';
+}
 function pageHead(title){
   return '<header class="topbar">'+
     '<div class="page-head" style="width:100%;margin:0">'+
@@ -824,6 +829,7 @@ function pageHead(title){
       '</div>'+
       '<div class="topbar-right">'+themeBtn()+'<button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button></div>'+
     '</div>'+
+    storeInfoHtml()+
   '</header><div class="barcode"></div>';
 }
 
@@ -847,6 +853,7 @@ function viewHome(){
         '<div class="brand-sub">'+esc(t('appSub'))+' · '+esc(todayLine())+'</div>'+
       '</div>'+
       '<div class="topbar-right">'+themeBtn()+'<button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button></div>'+
+      storeInfoHtml()+
     '</header>'+
     '<div class="barcode"></div>'+
     '<main class="home-main">'+
