@@ -341,6 +341,14 @@ body.night .barcode{opacity:.9}
   .module-card{padding:20px}
   .mc-icon{width:58px;height:58px}
   .home-main{padding-top:4px}
+  /* 快递行手机端自适应：换行，表头隐藏，缩小列宽 */
+  .p2{flex-wrap:wrap;gap:6px 8px}
+  .p2-head{display:none}
+  .p2-main{flex:1 1 100%}
+  .p2-time{min-width:0;padding:0 6px}
+  .p2-status{width:auto;flex:0 0 auto}
+  .p2 .prow-ops{width:100%;justify-content:flex-end;margin-top:2px}
+  .date-row{flex-wrap:wrap}
 }
 @media (min-width:641px) and (max-width:1024px){
   .home-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
