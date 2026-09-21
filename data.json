@@ -1,0 +1,114 @@
+{
+  "settings": {
+    "lang": "zh",
+    "theme": "night",
+    "adminPass": "123456",
+    "baseCurrency": "PKR",
+    "storeNameZh": "社区超市",
+    "storeNameEn": "Community Supermarket",
+    "categories": [
+      {
+        "id": "c1",
+        "zh": "蔬菜水果",
+        "en": "Fresh Produce"
+      },
+      {
+        "id": "c2",
+        "zh": "零食饮料",
+        "en": "Snacks & Drinks"
+      },
+      {
+        "id": "c3",
+        "zh": "日用百货",
+        "en": "Daily Goods"
+      },
+      {
+        "id": "c4",
+        "zh": "烟",
+        "en": "Tobacco"
+      },
+      {
+        "id": "c5",
+        "zh": "酒槟榔",
+        "en": "Alcohol & Betel"
+      }
+    ]
+  },
+  "products": [
+    {
+      "id": "mublrlwa9masdk",
+      "nameZh": "新鲜苹果",
+      "nameEn": "",
+      "categoryId": "c1",
+      "price": 18.5,
+      "unit": "斤",
+      "inStock": true,
+      "img": null
+    }
+  ],
+  "parcels": [
+    {
+      "id": "mublrlwajmr5dn",
+      "trackingNo": "YT259347025",
+      "name": "阿里妈妈",
+      "tail": "1551",
+      "note": "9栋3单元",
+      "pickupNo": "⑦",
+      "shelf": "A-1",
+      "arrivalTime": "2026-09-21T16:52:48.154Z",
+      "status": "pending",
+      "pickTime": null,
+      "requested": true,
+      "requestTime": "2026-09-21T18:53:27.866Z"
+    },
+    {
+      "id": "mublrlwadm765n",
+      "trackingNo": "13600792089",
+      "name": "老王",
+      "tail": "9875",
+      "note": "9栋8单元",
+      "pickupNo": "④",
+      "shelf": "B-3",
+      "arrivalTime": "2026-09-20T18:52:48.154Z",
+      "status": "pending",
+      "pickTime": null
+    },
+    {
+      "id": "mublrlwace36hb",
+      "trackingNo": "YT2550260285",
+      "name": "小张",
+      "tail": "8552",
+      "note": "9栋8单元",
+      "pickupNo": "⑩",
+      "shelf": "A-2",
+      "arrivalTime": "2026-09-19T18:52:48.154Z",
+      "status": "pending",
+      "pickTime": null
+    },
+    {
+      "id": "mublrlwaol9wdo",
+      "trackingNo": "YT7642908821",
+      "name": "李姐",
+      "tail": "6767",
+      "note": "9栋8单元",
+      "pickupNo": "②",
+      "shelf": "C-1",
+      "arrivalTime": "2026-09-18T18:52:48.154Z",
+      "status": "pending",
+      "pickTime": null
+    },
+    {
+      "id": "mublrlwah5si9f",
+      "trackingNo": "YT764334061",
+      "name": "赵哥",
+      "tail": "8390",
+      "note": "9栋17号",
+      "pickupNo": "⑥",
+      "shelf": "B-1",
+      "arrivalTime": "2026-09-17T18:52:48.154Z",
+      "status": "pending",
+      "pickTime": null
+    }
+  ],
+  "consign": []
+}

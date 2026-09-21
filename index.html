@@ -572,8 +572,10 @@ const S = { settings:null, products:[], parcels:[], consign:[] };
 // 经由 http(s) 访问时，数据与所有访问者共享（存于服务器 data.json）；file:// 打开时仍用本机 localStorage
 const USE_REMOTE = (typeof location!=='undefined' && location.protocol && location.protocol.indexOf('http')===0);
 let _remoteTimer=null;
+let _localDirtyUntil=0;
 function remoteSync(){
   if(!USE_REMOTE) return;
+  _localDirtyUntil = Date.now()+2500; // 本地刚改过，2.5秒内不拉服务器覆盖
   clearTimeout(_remoteTimer);
   _remoteTimer=setTimeout(()=>{
     try{ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{}); }catch(e){}
@@ -581,6 +583,7 @@ function remoteSync(){
 }
 async function remoteInit(){
   if(!USE_REMOTE) return;
+  if(Date.now() < _localDirtyUntil) return; // 避免拉服务器覆盖刚做的操作
   try{
     const r=await fetch('/api/state',{cache:'no-store'});
     if(!r.ok) return;
