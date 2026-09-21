@@ -274,6 +274,9 @@ body.night .barcode{opacity:.9}
 .p2-time{font-size:12px;color:var(--ink-2);text-align:center;line-height:1.45;flex:0 0 auto}
 .p2-num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;flex:0 0 auto;border:1.5px solid var(--green);color:var(--green-dark);background:var(--green-soft)}
 .p2.off .p2-num{border-color:var(--line);color:var(--ink-3);background:transparent}
+.p2-head{border-top:none;border-bottom:1px solid var(--line);padding:8px 4px}
+.p2-head .p2-h{font-size:12px;color:var(--ink-3);font-weight:600}
+.p2-head .p2-num{border:none;background:transparent}
 .admin-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 .admin-stack{display:flex;flex-direction:column;gap:16px}
 @media (max-width:860px){.admin-grid2{grid-template-columns:1fr}}
@@ -401,7 +404,7 @@ const I18N = {
     statusReview:'取件中', reviewTip:'已申请取件，等待店员确认', requestPickTip:'点击申请取件', requestBadge:'客户申请取件', requestSent:'已提交取件申请，等待店员确认', rejectRequest:'驳回申请', rejected:'已驳回申请', withdrawTip:'再次点击撤回取件申请', withdrawn:'已撤回取件申请', requestTime:'申请时间',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取件',
-    arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
+    arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号', status:'状态',
     notFoundTitle:'未找到该运单', notFoundDesc:'请核对运单号是否输入正确，或到服务台咨询工作人员。',
     resultFound:'查询结果',
     consignTitle:'二手寄售', consignSubtitle:'店内二手物品寄售',
@@ -469,7 +472,7 @@ const I18N = {
     statusReview:'Picking up', reviewTip:'Pickup requested, waiting for staff', requestPickTip:'Tap to request pickup', requestBadge:'Customer requested pickup', requestSent:'Pickup request sent, waiting for staff', rejectRequest:'Reject request', rejected:'Request rejected', withdrawTip:'Tap again to withdraw request', withdrawn:'Request withdrawn', requestTime:'Requested at',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
-    arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
+    arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.', status:'Status',
     notFoundTitle:'Tracking number not found', notFoundDesc:'Please check the number, or ask our staff at the service counter.',
     resultFound:'Result',
     consignTitle:'Second-hand Consignment', consignSubtitle:'Store second-hand consignment',
@@ -943,6 +946,12 @@ function publicParcelList(){
     '<div class="panel-head"><h3>'+esc(t('parcelAll'))+'</h3><span class="count num">'+esc(String(list.length))+' / '+esc(String(total))+'</span></div>'+
     '<div class="search-wrap" style="margin-bottom:8px">'+ICONS.search+'<input id="plist-search" data-action="plist-search" placeholder="'+esc(t('plistPh'))+'" value="'+esc(PL.q)+'"></div>'+
     '<div class="chips" style="margin-bottom:10px">'+chips+'</div>'+
+    '<div class="p2 p2-head">'+
+      '<div class="p2-main"><div class="p2-h">'+esc(t('trackingNo'))+'</div></div>'+
+      '<div class="p2-time p2-h">'+esc(t('arrivalTime'))+'</div>'+
+      '<div class="p2-h">'+esc(t('status'))+'</div>'+
+      '<div class="p2-num p2-h">'+esc(t('parcelPickupNo'))+'</div>'+
+    '</div>'+
     rows+
     pagerHtml(PL.page, totalPages, 'plist-page')+
   '</div>';
