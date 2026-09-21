@@ -140,6 +140,26 @@ body.night .barcode{opacity:.9}
 .price-tag{display:inline-flex;align-items:baseline;gap:3px;background:linear-gradient(135deg,#FCEFDF,#FADFBE);color:var(--orange);font-weight:800;font-size:16px;padding:4px 10px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(217,102,12,.15)}
 .price-tag .cur{font-size:11px;font-weight:600}
 .price-tag .unit{font-size:12px;font-weight:600;opacity:.75}
+
+/* ===== 闲鱼风 二手寄售卡片 ===== */
+.xy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.xy-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.xy-card:hover{transform:translateY(-2px)}
+.xy-img{position:relative;aspect-ratio:1/1;background:#f1f3f5;display:grid;place-items:center;overflow:hidden}
+.xy-img img{width:100%;height:100%;object-fit:cover;display:block}
+.xy-img .ph{color:#adb5bd}
+.xy-sold{position:absolute;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;letter-spacing:4px}
+.xy-status{position:absolute;left:8px;top:8px;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
+.xy-status.st-pending{background:rgba(255,159,67,.92);color:#fff}
+.xy-status.st-sold{background:rgba(108,117,125,.85);color:#fff}
+.xy-body{padding:9px 10px 11px;display:flex;flex-direction:column;gap:6px;flex:1}
+.xy-title{font-size:13.5px;font-weight:600;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em}
+.xy-price{color:#ff2e4d;font-weight:800;font-size:19px;line-height:1;display:flex;align-items:baseline;gap:2px}
+.xy-price .cur{font-size:12px;font-weight:700}
+.xy-meta{display:flex;align-items:center;gap:6px;margin-top:auto}
+.xy-avatar{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#ffd66b,#ff9f43);color:#7a4a00;font-size:10px;font-weight:700;display:grid;place-items:center;flex:0 0 auto}
+.xy-seller{font-size:11px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.xy-want{font-size:10.5px;color:#ff6b35;background:#fff1ea;border:1px solid #ffd6c2;border-radius:8px;padding:1px 7px;flex:0 0 auto}
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
 .b-ok{background:var(--green-soft);color:var(--green)}
 .b-no{background:var(--ink-3);color:#fff}
@@ -365,7 +385,7 @@ const I18N = {
     consignPhotoLabel:'物品图片（选填）', consignSubmit:'提交寄售申请',
     consignSubmitted:'已提交，等待店员审核上架',
     consignQueryTitle:'查询我的寄售', consignQueryPlaceholder:'输入您提交时留的联系电话', consignQueryBtn:'查询',
-    consignStatusPending:'待审核', consignStatusOn:'在售中', consignStatusSold:'已售出',
+    consignStatusPending:'待审核', consignStatusOn:'在售中', consignStatusSold:'已售出', xianyuWant:'我想要',
     consignRequireTitle:'请填写物品名称', consignRequirePrice:'请填写正确的价格', consignRequireContact:'请填写联系电话',
     consignNoResult:'未找到该联系电话的寄售记录', consignSubmitTime:'提交时间', consignContact:'联系电话', consignConsignor:'寄售人',
     consignPriceUnit:'价格',
@@ -426,7 +446,7 @@ const I18N = {
     consignPhotoLabel:'Photo (optional)', consignSubmit:'Submit consignment request',
     consignSubmitted:'Submitted, waiting for staff approval',
     consignQueryTitle:'Check my consignment', consignQueryPlaceholder:'Enter the contact phone you submitted', consignQueryBtn:'Check',
-    consignStatusPending:'Pending review', consignStatusOn:'On sale', consignStatusSold:'Sold',
+    consignStatusPending:'Pending review', consignStatusOn:'On sale', consignStatusSold:'Sold', xianyuWant:'Want it',
     consignRequireTitle:'Please enter an item name', consignRequirePrice:'Please enter a valid price', consignRequireContact:'Please enter a contact phone',
     consignNoResult:'No consignment found for this phone number', consignSubmitTime:'Submitted', consignContact:'Phone', consignConsignor:'Consignor',
     consignPriceUnit:'Price',
@@ -569,17 +589,21 @@ function consignStatusBadge(st){
 }
 function consignCardHtml(c, cur){
   const img = c.photo ? '<img src="'+esc(c.photo)+'" alt="">' : '<span class="ph">'+ICONS.tag+'</span>';
-  const contactLine = c.contact ? '<div class="prow-sub">'+ICONS.info+' '+esc(c.contact)+(c.consignor?' · '+esc(c.consignor):'')+'</div>' : '';
-  return '<div class="prod-card">'+
-    '<div class="prod-img">'+img+'</div>'+
-    '<div class="prod-body">'+
-      '<div class="prod-name">'+esc(c.title)+'</div>'+
-      (c.desc?'<div class="prod-cat">'+esc(c.desc)+'</div>':'')+
-      '<div class="prod-bottom">'+
-        '<span class="price-tag num"><span class="cur">'+esc(cur)+'</span>'+esc(fmtMoney(c.price))+'</span>'+
-        consignStatusBadge(c.status)+
+  const sold = c.status==='sold';
+  let stTag='';
+  if(c.status==='pending') stTag='<span class="xy-status st-pending">'+esc(t('consignStatusPending'))+'</span>';
+  else if(sold) stTag='<span class="xy-status st-sold">'+esc(t('consignStatusSold'))+'</span>';
+  const initial = (c.consignor||c.contact||'闲').trim().charAt(0).toUpperCase();
+  return '<div class="xy-card">'+
+    '<div class="xy-img">'+img+stTag+(sold?'<div class="xy-sold">'+esc(t('consignStatusSold'))+'</div>':'')+'</div>'+
+    '<div class="xy-body">'+
+      '<div class="xy-title">'+esc(c.title)+(c.desc?' <span style="color:var(--ink-3);font-weight:400">'+esc(c.desc)+'</span>':'')+'</div>'+
+      '<div class="xy-price"><span class="cur">'+esc(cur)+'</span>'+esc(fmtMoney(c.price))+'</div>'+
+      '<div class="xy-meta">'+
+        '<span class="xy-avatar">'+esc(initial)+'</span>'+
+        '<span class="xy-seller">'+esc(c.consignor||c.contact||'卖家')+'</span>'+
+        (sold?'':'<span class="xy-want">'+esc(t('xianyuWant'))+'</span>')+
       '</div>'+
-      contactLine+
     '</div>'+
   '</div>';
 }
@@ -771,7 +795,7 @@ function viewConsign(){
   if(!onSale.length){
     grid = '<div class="empty"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('consignEmpty'))+'</h3><p>'+esc(t('consignEmptyDesc'))+'</p></div>';
   }else{
-    grid = '<div class="prod-grid">'+onSale.map(c=>consignCardHtml(c,cur)).join('')+'</div>';
+    grid = '<div class="xy-grid">'+onSale.map(c=>consignCardHtml(c,cur)).join('')+'</div>';
   }
   // 查询我的寄售结果
   let queryHtml = '';
