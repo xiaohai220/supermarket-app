@@ -23,6 +23,13 @@ function writeState(obj){
 const handler = (req, res) => {
   const urlPath = decodeURIComponent(req.url.split('?')[0]);
 
+  // HTTP 自动跳转 HTTPS
+  if (!req.socket.encrypted && process.env.REDIRECT_HTTPS === '1' && urlPath !== '/api/state' && !urlPath.startsWith('/.well-known')) {
+    res.writeHead(301, { 'Location': 'https://xxhrcs.com' + req.url });
+    res.end();
+    return;
+  }
+
   // 共享数据接口
   if(urlPath === '/api/state'){
     if(req.method === 'GET'){
