@@ -822,47 +822,51 @@ function viewHome(){
 }
 
 /* ===== 商品展示 ===== */
-function viewProducts(){
+function prodFiltered(){
   let list = S.products.slice();
   if(PS.cat && PS.cat!=='all') list = list.filter(p=>p.categoryId===PS.cat);
   if(PS.q){ const q=PS.q.toLowerCase(); list = list.filter(p=>(p.nameZh||'').toLowerCase().includes(q)||(p.nameEn||'').toLowerCase().includes(q)); }
   if(PS.sort==='priceAsc') list.sort((a,b)=>(a.price||0)-(b.price||0));
   else if(PS.sort==='priceDesc') list.sort((a,b)=>(b.price||0)-(a.price||0));
+  return list;
+}
+function prodGridHtml(list){
+  const cur = S.settings.baseCurrency || 'PKR';
+  if(!list.length){
+    return '<div class="empty"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('emptyProductsTitle'))+'</h3><p>'+esc(t('emptyProductsDesc'))+'</p></div>';
+  }
+  return '<div class="prod-grid">'+list.map(p=>{
+    const name = lang==='zh' ? (p.nameZh||p.nameEn) : (p.nameEn||p.nameZh);
+    const img = p.img ? '<img src="'+esc(p.img)+'" alt="">' : '<span class="ph">'+ICONS.tag+'</span>';
+    return '<div class="prod-card">'+
+      '<div class="prod-img">'+img+'</div>'+
+      '<div class="prod-body">'+
+        '<div class="prod-name">'+esc(name)+'</div>'+
+        '<div class="prod-cat">'+esc(catName(p.categoryId))+'</div>'+
+        '<div class="prod-bottom">'+
+          '<span class="price-tag num"><span class="cur">'+esc(cur)+'</span>'+esc(fmtMoney(p.price))+'<span class="unit">/'+esc(p.unit||'')+'</span></span>'+
+          '<span class="badge '+(p.inStock?'b-ok':'b-no')+'">'+esc(t(p.inStock?'inStock':'outOfStock'))+'</span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('')+'</div>';
+}
+function viewProducts(){
+  const list = prodFiltered();
   const chips = '<button class="chip '+(PS.cat==='all'?'on':'')+'" data-action="prod-cat" data-id="all">'+esc(t('allCats'))+'</button>'+
     S.settings.categories.map(c=>'<button class="chip '+(PS.cat===c.id?'on':'')+'" data-action="prod-cat" data-id="'+esc(c.id)+'">'+esc(lang==='zh'?c.zh:c.en)+'</button>').join('');
   const sortOpts = [['default',t('sortDefault')],['priceAsc',t('sortPriceAsc')],['priceDesc',t('sortPriceDesc')]]
     .map(o=>'<option value="'+o[0]+'" '+(PS.sort===o[0]?'selected':'')+'>'+esc(o[1])+'</option>').join('');
-  const cur = S.settings.baseCurrency || 'PKR';
-  let grid;
-  if(!list.length){
-    grid = '<div class="empty"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('emptyProductsTitle'))+'</h3><p>'+esc(t('emptyProductsDesc'))+'</p></div>';
-  }else{
-    grid = '<div class="prod-grid">'+list.map(p=>{
-      const name = lang==='zh' ? (p.nameZh||p.nameEn) : (p.nameEn||p.nameZh);
-      const img = p.img ? '<img src="'+esc(p.img)+'" alt="">' : '<span class="ph">'+ICONS.tag+'</span>';
-      return '<div class="prod-card">'+
-        '<div class="prod-img">'+img+'</div>'+
-        '<div class="prod-body">'+
-          '<div class="prod-name">'+esc(name)+'</div>'+
-          '<div class="prod-cat">'+esc(catName(p.categoryId))+'</div>'+
-          '<div class="prod-bottom">'+
-            '<span class="price-tag num"><span class="cur">'+esc(cur)+'</span>'+esc(fmtMoney(p.price))+'<span class="unit">/'+esc(p.unit||'')+'</span></span>'+
-            '<span class="badge '+(p.inStock?'b-ok':'b-no')+'">'+esc(t(p.inStock?'inStock':'outOfStock'))+'</span>'+
-          '</div>'+
-        '</div>'+
-      '</div>';
-    }).join('')+'</div>';
-  }
   return pageHead(t('productsTitle'))+
     '<div class="toolbar card">'+
-      '<div class="search-wrap">'+ICONS.search+'<input id="prod-search" data-action="prod-search" data-enter="prod-search" placeholder="'+esc(t('searchPlaceholder'))+'" value="'+esc(PS.q)+'"></div>'+
+      '<div class="search-wrap">'+ICONS.search+'<input id="prod-search" data-action="prod-search-live" placeholder="'+esc(t('searchPlaceholder'))+'" value="'+esc(PS.q)+'"></div>'+
       '<div class="chips">'+chips+'</div>'+
       '<div class="sort-row">'+
         '<select data-action="prod-sort">'+sortOpts+'</select>'+
-        '<span class="count num">'+esc(fmtCount(t('productsCount'),{n:list.length}))+'</span>'+
+        '<span class="count num" id="prod-count">'+esc(fmtCount(t('productsCount'),{n:list.length}))+'</span>'+
       '</div>'+
     '</div>'+
-    grid;
+    '<div id="prod-grid">'+prodGridHtml(list)+'</div>';
 }
 
 /* ===== 快递查询 ===== */
@@ -895,7 +899,7 @@ function viewParcels(){
     '<div class="card p-search">'+
       '<h2>'+esc(t('parcelsTitle'))+'</h2>'+
       '<div class="query-row">'+
-        '<div class="search-wrap">'+ICONS.search+'<input id="p-tracking" data-action="parcel-query" data-enter="parcel-query" placeholder="'+esc(t('trackingPlaceholder'))+'" value="'+esc(PQ.tracking)+'"></div>'+
+        '<div class="search-wrap">'+ICONS.search+'<input id="p-tracking" data-enter="parcel-query" placeholder="'+esc(t('trackingPlaceholder'))+'" value="'+esc(PQ.tracking)+'"></div>'+
         '<button class="btn btn-primary" data-action="parcel-query">'+ICONS.search+esc(t('checkBtn'))+'</button>'+
       '</div>'+
     '</div>'+
@@ -1439,7 +1443,14 @@ document.addEventListener('change', e=>{
 document.addEventListener('input', e=>{
   const t = e.target;
   const act = t && t.getAttribute && t.getAttribute('data-action');
-  if(act==='prod-search'){ PS.q = t.value; render(); }
+  if(act==='prod-search-live'){
+    PS.q = t.value;
+    const list = prodFiltered();
+    const g = document.getElementById('prod-grid');
+    if(g) g.innerHTML = prodGridHtml(list);
+    const c = document.getElementById('prod-count');
+    if(c) c.textContent = fmtCount(t('productsCount'),{n:list.length});
+  }
   else if(act==='parcel-search'){ PA.q = t.value; render(); }
   else if(act==='conv-amount'){ CV.amount = t.value; updateConvResult(); }
 });

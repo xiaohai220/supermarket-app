@@ -178,6 +178,17 @@ async function main() {
     const searchHtml = api.appHtml();
     check('1.8 搜索"苹果"命中且过滤掉香蕉', searchHtml.includes('苹果') && !searchHtml.includes('香蕉'));
 
+    // 回归：手机点按输入框不能触发整页重绘（data-action 必须是 prod-search-live，
+    // 且由 input 事件局部刷新 prod-grid，而不是 click→render）
+    api.go('#/products'); api.render();
+    const prodHtml = api.appHtml();
+    check('1.8a 商品搜索框使用 prod-search-live（点按不重绘）', prodHtml.includes('data-action="prod-search-live"'));
+    check('1.8b 商品搜索框不再带会触发 render 的旧 data-action', !prodHtml.includes('id="prod-search" data-action="prod-search"'));
+    check('1.8c 快递查询输入框不带 data-action（点按不立即查询）', !api.appHtml().includes('id="p-tracking" data-action="parcel-query"'));
+    check('1.8d 商品列表容器 id=prod-grid 存在', prodHtml.includes('id="prod-grid"'));
+    api.go('#/parcels'); api.render();
+    check('1.8e 快递查询输入框不带 data-action（点按不立即查询）', !api.appHtml().includes('id="p-tracking" data-action="parcel-query"'));
+
     // 编辑第一个商品
     const id0 = api.S.products.find(p => p.nameZh === '苹果').id;
     api.openProductForm(id0);
