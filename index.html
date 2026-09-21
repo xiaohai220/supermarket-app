@@ -273,6 +273,7 @@ body.night .barcode{opacity:.9}
 .p2-meta .tag{color:var(--ink-3)}
 .p2-time{font-size:12px;color:var(--ink-2);text-align:center;line-height:1.45;flex:0 0 auto;padding:0 10px}
 .p2-num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;flex:0 0 auto;border:1.5px solid var(--green);color:var(--green-dark);background:var(--green-soft)}
+.p2-status{flex:0 0 auto;width:60px;text-align:center}
 .p2.off .p2-num{border-color:var(--line);color:var(--ink-3);background:transparent}
 .p2-head{border-top:none;border-bottom:1px solid var(--line);padding:8px 4px}
 .p2-head .p2-h{font-size:12px;color:var(--ink-3);font-weight:600}
@@ -938,7 +939,7 @@ function publicParcelList(){
         '</div>'+
         '<div class="p2-time">'+fmtShortDT(p.arrivalTime)+'</div>'+
         '<div class="p2-time num">'+reqTimeCell+'</div>'+
-        badge+
+        '<div class="p2-status">'+badge+'</div>'+
         '<div class="p2-num">'+esc(p.pickupNo||'—')+'</div>'+
       '</div>';
     }).join('');
@@ -951,7 +952,7 @@ function publicParcelList(){
       '<div class="p2-main"><div class="p2-h">'+esc(t('trackingNo'))+'</div></div>'+
       '<div class="p2-time p2-h">'+esc(t('arrivalTime'))+'</div>'+
       '<div class="p2-time p2-h">'+esc(t('requestTime'))+'</div>'+
-      '<div class="p2-h">'+esc(t('status'))+'</div>'+
+      '<div class="p2-status p2-h">'+esc(t('status'))+'</div>'+
       '<div class="p2-num p2-h">'+esc(t('parcelPickupNo'))+'</div>'+
     '</div>'+
     rows+
