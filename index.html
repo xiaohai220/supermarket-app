@@ -175,6 +175,8 @@ body.night .barcode{opacity:.9}
 .b-review{background:#fff3cd;color:#b8860b;border:1px solid #ffe08a}
 .badge.clickable{cursor:pointer;font:inherit;border:none}
 .badge.clickable:active{transform:scale(.96)}
+.pager{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:12px}
+.pager button[disabled]{opacity:.4;pointer-events:none}
 
 /* ============ 空状态 ============ */
 .empty{padding:56px 20px;text-align:center;color:var(--ink-2)}
@@ -430,7 +432,7 @@ const I18N = {
     requireName:'请填写商品名称', requirePrice:'请填写正确的价格',
     addParcel:'登记快递', shelfNo:'货架号', shelfPlaceholder:'如：A-3',
     arrival:'到店时间', quickAdd:'连续登记（登记后保留表单继续录入）', register:'登记',
-    parcelList:'快递列表', parcelCount:'共 {n} 件 · 待取 {p} 件',
+    parcelList:'快递列表', parcelCount:'共 {n} 件 · 待取 {p} 件', prevPage:'上一页', nextPage:'下一页',
     filterAll:'全部', markPicked:'标记已取走', undoPick:'撤销标记', noParcels:'暂无快递记录',
     requireTracking:'请填写运单号', dupTracking:'该运单号已登记', parcelAdded:'已登记', parcelUpdated:'已更新',
     consignPending:'待审核', consignOn:'在售', consignSold:'已售出',
@@ -498,7 +500,7 @@ const I18N = {
     requireName:'Please enter a product name', requirePrice:'Please enter a valid price',
     addParcel:'Register parcel', shelfNo:'Shelf', shelfPlaceholder:'e.g. A-3',
     arrival:'Arrival time', quickAdd:'Keep form for next entry', register:'Register',
-    parcelList:'Parcel list', parcelCount:'{n} total · {p} waiting',
+    parcelList:'Parcel list', parcelCount:'{n} total · {p} waiting', prevPage:'Prev', nextPage:'Next',
     filterAll:'All', markPicked:'Mark picked up', undoPick:'Undo', noParcels:'No parcels yet',
     requireTracking:'Please enter a tracking number', dupTracking:'This tracking number already exists', parcelAdded:'Registered', parcelUpdated:'Updated',
     consignPending:'Pending review', consignOn:'On sale', consignSold:'Sold',
@@ -706,7 +708,8 @@ function consignCardHtml(c, cur){
 const PS = { q:'', cat:'all', sort:'default' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
 const PL = { q:'', status:'all' }; // 客户快递列表筛选
-const PA = { filter:'all', q:'' };                 // 快递管理
+const PA = { filter:'all', q:'', page:1 };                 // 快递管理
+const PAGE_SIZE = 10;
 let ADMIN_OK = false;
 let FORM_PRODUCT_ID = null;
 
@@ -1114,12 +1117,16 @@ function adminParcels(){
     if(PA.q && !p.trackingNo.toLowerCase().includes(PA.q.toLowerCase())) return false;
     return true;
   }).sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  if(PA.page > totalPages) PA.page = totalPages;
+  if(PA.page < 1) PA.page = 1;
+  const pageList = filtered.slice((PA.page-1)*PAGE_SIZE, PA.page*PAGE_SIZE);
   const curTime = nowLocalInput();
   let rows;
   if(!filtered.length){
     rows = '<div class="empty" style="padding:30px 12px"><div class="e-ico">'+ICONS.box+'</div><h3>'+esc(t('noParcels'))+'</h3></div>';
   }else{
-    rows = filtered.map(p=>{
+    rows = pageList.map(p=>{
       let statusBadge;
       if(p.status==='picked'){
         statusBadge = '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>';
@@ -1171,8 +1178,17 @@ function adminParcels(){
       '<div class="chips" style="margin-bottom:10px">'+filters+'</div>'+
       '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-action="parcel-search" data-enter="parcel-search" placeholder="'+esc(t('searchPlaceholder'))+'" value="'+esc(PA.q)+'"></div>'+
       rows+
+      pagerHtml(PA.page, totalPages, 'parcel-page')+
     '</div>'+
   '</div>';
+}
+function pagerHtml(page, total, act){
+  if(total<=1) return '';
+  const btns = [];
+  btns.push('<button class="btn btn-ghost btn-sm" '+(page<=1?'disabled':'')+' data-action="'+act+'" data-id="'+(page-1)+'">'+esc(t('prevPage'))+'</button>');
+  btns.push('<span class="count num" style="align-self:center">'+esc(page)+' / '+esc(total)+'</span>');
+  btns.push('<button class="btn btn-ghost btn-sm" '+(page>=total?'disabled':'')+' data-action="'+act+'" data-id="'+(page+1)+'">'+esc(t('nextPage'))+'</button>');
+  return '<div class="pager">'+btns.join('')+'</div>';
 }
 function addParcelFromForm(){
   const no = document.getElementById('pa-no').value.replace(/\s+/g,'').toUpperCase();
@@ -1542,9 +1558,10 @@ function runAction(action, id, el){
         saveParcels(); render(); toast(t('deleted'));
       });
       break;
-    case 'parcel-filter': PA.filter = id; render(); break;
+    case 'parcel-filter': PA.filter = id; PA.page = 1; render(); break;
     case 'plist-filter': PL.status = id; render(); break;
-    case 'parcel-search': PA.q = document.getElementById('pa-search').value; render(); break;
+    case 'parcel-page': PA.page = parseInt(id,10)||1; render(); break;
+    case 'parcel-search': PA.q = document.getElementById('pa-search').value; PA.page = 1; render(); break;
     /* 系统设置 */
     case 'settings-store-save': {
       const zh = document.getElementById('st-name-zh').value.trim();
