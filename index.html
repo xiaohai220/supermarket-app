@@ -562,10 +562,10 @@ function defaultSettings(){
     storeNameEn:'Community Supermarket',
     categories:[
       {id:'c1', zh:'蔬菜水果', en:'Fresh Produce'},
-      {id:'c2', zh:'粮油副食', en:'Groceries'},
-      {id:'c3', zh:'零食饮料', en:'Snacks & Drinks'},
-      {id:'c4', zh:'乳品烘焙', en:'Dairy & Bakery'},
-      {id:'c5', zh:'日用百货', en:'Daily Goods'}
+      {id:'c2', zh:'零食饮料', en:'Snacks & Drinks'},
+      {id:'c3', zh:'日用百货', en:'Daily Goods'},
+      {id:'c4', zh:'烟', en:'Tobacco'},
+      {id:'c5', zh:'酒槟榔', en:'Alcohol & Betel'}
     ]
   };
 }
@@ -575,6 +575,12 @@ function load(){
   S.products = LS.get(KEYS.products, []); if(!Array.isArray(S.products)) S.products=[];
   S.parcels  = LS.get(KEYS.parcels, []);  if(!Array.isArray(S.parcels)) S.parcels=[];
   S.consign = LS.get(KEYS.consign, []); if(!Array.isArray(S.consign)) S.consign=[];
+  // 分类预设迁移：第一次升级到 v1 时替换为标准分类
+  if(typeof localStorage!=='undefined' && localStorage.getItem('sm_cat_v1')!=='1'){
+    S.settings.categories = defaultSettings().categories;
+    try{ localStorage.setItem('sm_cat_v1','1'); }catch(e){}
+    LS.set(KEYS.settings, S.settings);
+  }
   lang = (S.settings.lang==='en') ? 'en' : 'zh';
   seedDemoOnce();
 }
