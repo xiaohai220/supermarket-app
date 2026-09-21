@@ -555,6 +555,30 @@ function load(){
   S.parcels  = LS.get(KEYS.parcels, []);  if(!Array.isArray(S.parcels)) S.parcels=[];
   S.consign = LS.get(KEYS.consign, []); if(!Array.isArray(S.consign)) S.consign=[];
   lang = (S.settings.lang==='en') ? 'en' : 'zh';
+  seedDemoOnce();
+}
+function seedDemoOnce(){
+  if(typeof window!=='undefined' && window.__SM_TEST__) return;
+  if(localStorage.getItem('sm_demo_v1')==='1') return;
+  const cat0 = (S.settings.categories[0] && S.settings.categories[0].id) || 'c1';
+  if(!S.products.some(p=>p.nameZh==='新鲜苹果')){
+    S.products.push({id:uid(), nameZh:'新鲜苹果', nameEn:'', categoryId:cat0, price:18.5, unit:'斤', inStock:true, img:null});
+  }
+  const now = Date.now();
+  const mk = (no,name,shelf,agoMin,status)=>{
+    const t = new Date(now - agoMin*60000).toISOString();
+    return { id:uid(), trackingNo:no, name:name, shelf:shelf, arrivalTime:t, status:status, pickTime: status==='picked' ? new Date(now - agoMin*60000 + 3600000).toISOString() : null };
+  };
+  const demo = [
+    mk('SF1002003001','阿里妈妈','A-1',120,'pending'),
+    mk('YT8899001122','老王','B-3',240,'pending'),
+    mk('JD7788990011','小张','A-2',480,'pending'),
+    mk('ZTO5566778899','李姐','C-1',1440,'picked'),
+    mk('YD445566778899','赵哥','B-1',2880,'pending')
+  ];
+  demo.forEach(d=>{ if(!S.parcels.some(p=>p.trackingNo===d.trackingNo)) S.parcels.push(d); });
+  saveProducts(); saveParcels();
+  try{ localStorage.setItem('sm_demo_v1','1'); }catch(e){}
 }
 function saveSettings(){ return LS.set(KEYS.settings, S.settings); }
 function saveProducts(){ return LS.set(KEYS.products, S.products); }

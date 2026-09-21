@@ -60,7 +60,7 @@ function boot(opts) {
     body: { appendChild() {} }
   };
   global.document = doc;
-  global.window = { addEventListener() {}, scrollTo() {} };
+  global.window = { addEventListener() {}, scrollTo() {}, __SM_TEST__: true };
   let hash = '';
   global.location = { get hash() { return hash; }, set hash(v) { hash = v; } };
   global.fetch = opts.fetch || (async () => ({ ok: true, json: async () => ({ result: 'success', base_code: 'PKR', rates: okRates('PKR') }) }));
