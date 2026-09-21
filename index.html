@@ -61,7 +61,7 @@ a{color:var(--green)}
 .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:4px 0 14px}
 .brand{font-size:26px;font-weight:800;letter-spacing:.2px;color:#F6E7B8;text-shadow:0 2px 14px rgba(246,231,184,.25)}
 .brand-sub{color:rgba(255,255,255,.72);font-size:13px;margin-top:3px}
-.store-info{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:rgba(255,255,255,.85)}
+.store-info{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;margin-top:10px;font-size:12.5px;color:rgba(255,255,255,.85)}
 body.day .store-info{color:#3a4f44}
 .store-info span{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.12);line-height:1.4}
 .topbar-right{display:flex;gap:8px;flex-shrink:0}
@@ -830,7 +830,7 @@ function pageHead(title){
         '<button class="icon-btn" data-action="back" aria-label="'+esc(t('back'))+'">'+ICONS.back+'</button>'+
         '<h1 style="font-size:20px;font-weight:800;color:var(--green-dark)">'+esc(title)+'</h1>'+
       '</div>'+
-      '<div class="topbar-right">'+themeBtn()+'<button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button></div>'+
+      '<div class="topbar-right">'+themeBtn()+'</div>'+
     '</div>'+
     storeInfoHtml()+
   '</header><div class="barcode"></div>';
@@ -855,7 +855,7 @@ function viewHome(){
         '<h1 class="brand">'+esc(storeName)+'</h1>'+
         '<div class="brand-sub">'+esc(t('appSub'))+' · '+esc(todayLine())+'</div>'+
       '</div>'+
-      '<div class="topbar-right">'+themeBtn()+'<button class="btn btn-ghost btn-sm" data-action="toggle-lang">'+esc(t('langSwitch'))+'</button></div>'+
+      '<div class="topbar-right">'+themeBtn()+'</div>'+
       storeInfoHtml()+
     '</header>'+
     '<div class="barcode"></div>'+
