@@ -259,6 +259,16 @@ body.night .barcode{opacity:.9}
 .prow-name{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .prow-sub{font-size:13px;color:var(--ink-2);margin-top:2px}
 .prow-ops{display:flex;gap:8px;flex-shrink:0}
+
+/* 快递列表：单号 / 尾号备注 / 时间 / 状态 / 取件编号 */
+.p2{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid var(--line)}
+.p2-main{flex:1;min-width:0}
+.p2-no{font-weight:700;font-size:15px;letter-spacing:.3px}
+.p2-meta{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.p2-meta .tag{color:var(--ink-3)}
+.p2-time{font-size:12px;color:var(--ink-2);text-align:center;line-height:1.45;flex:0 0 auto}
+.p2-num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;flex:0 0 auto;border:1.5px solid var(--green);color:var(--green-dark);background:var(--green-soft)}
+.p2.off .p2-num{border-color:var(--line);color:var(--ink-3);background:transparent}
 .admin-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 .admin-stack{display:flex;flex-direction:column;gap:16px}
 @media (max-width:860px){.admin-grid2{grid-template-columns:1fr}}
@@ -382,6 +392,8 @@ const I18N = {
     productsCount:'共 {n} 件商品',
     parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
     parcelName:'收件人昵称', parcelNamePh:'如：阿里妈妈',
+    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
+    parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取走',
     arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
     notFoundTitle:'未找到该运单', notFoundDesc:'请核对运单号是否输入正确，或到服务台咨询工作人员。',
@@ -447,6 +459,8 @@ const I18N = {
     productsCount:'{n} items',
     parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
     parcelName:'Recipient nickname', parcelNamePh:'e.g. Auntie Li',
+    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
+    parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
     arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
     notFoundTitle:'Tracking number not found', notFoundDesc:'Please check the number, or ask our staff at the service counter.',
@@ -559,26 +573,26 @@ function load(){
 }
 function seedDemoOnce(){
   if(typeof window!=='undefined' && window.__SM_TEST__) return;
-  if(localStorage.getItem('sm_demo_v1')==='1') return;
+  if(localStorage.getItem('sm_demo_v2')==='1') return;
   const cat0 = (S.settings.categories[0] && S.settings.categories[0].id) || 'c1';
   if(!S.products.some(p=>p.nameZh==='新鲜苹果')){
     S.products.push({id:uid(), nameZh:'新鲜苹果', nameEn:'', categoryId:cat0, price:18.5, unit:'斤', inStock:true, img:null});
   }
   const now = Date.now();
-  const mk = (no,name,shelf,agoMin,status)=>{
+  const mk = (no,name,shelf,agoMin,status,tail,note,pickupNo)=>{
     const t = new Date(now - agoMin*60000).toISOString();
-    return { id:uid(), trackingNo:no, name:name, shelf:shelf, arrivalTime:t, status:status, pickTime: status==='picked' ? new Date(now - agoMin*60000 + 3600000).toISOString() : null };
+    return { id:uid(), trackingNo:no, name:name, tail:tail, note:note, pickupNo:pickupNo, shelf:shelf, arrivalTime:t, status:status, pickTime: status==='picked' ? new Date(now - agoMin*60000 + 3600000).toISOString() : null };
   };
   const demo = [
-    mk('SF1002003001','阿里妈妈','A-1',120,'pending'),
-    mk('YT8899001122','老王','B-3',240,'pending'),
-    mk('JD7788990011','小张','A-2',480,'pending'),
-    mk('ZTO5566778899','李姐','C-1',1440,'picked'),
-    mk('YD445566778899','赵哥','B-1',2880,'pending')
+    mk('YT259347025','阿里妈妈','A-1',120,'pending','1551','9栋3单元','⑦'),
+    mk('13600792089','老王','B-3',1440,'pending','9875','9栋8单元','④'),
+    mk('YT2550260285','小张','A-2',2880,'pending','8552','9栋8单元','⑩'),
+    mk('YT7642908821','李姐','C-1',4320,'pending','6767','9栋8单元','②'),
+    mk('YT764334061','赵哥','B-1',5760,'pending','8390','9栋17号','⑥')
   ];
   demo.forEach(d=>{ if(!S.parcels.some(p=>p.trackingNo===d.trackingNo)) S.parcels.push(d); });
   saveProducts(); saveParcels();
-  try{ localStorage.setItem('sm_demo_v1','1'); }catch(e){}
+  try{ localStorage.setItem('sm_demo_v2','1'); }catch(e){}
 }
 function saveSettings(){ return LS.set(KEYS.settings, S.settings); }
 function saveProducts(){ return LS.set(KEYS.products, S.products); }
@@ -590,6 +604,7 @@ function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 function p2(n){ return String(n).padStart(2,'0'); }
 function fmtDT(iso){ if(!iso) return '—'; const d=new Date(iso); if(isNaN(d)) return '—'; return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes()); }
+function fmtShortDT(iso){ if(!iso) return '—'; const d=new Date(iso); if(isNaN(d)) return '—'; return p2(d.getMonth()+1)+'-'+p2(d.getDate())+'<br>'+p2(d.getHours())+':'+p2(d.getMinutes()); }
 function fmtMoney(n){ n = Number(n)||0; return n.toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
 function nowLocalInput(){ const d=new Date(); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes()); }
 function todayLine(){
@@ -1049,17 +1064,24 @@ function adminParcels(){
   }else{
     rows = filtered.map(p=>{
       const statusBadge = p.status==='picked' ? '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>' : '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
-      let sub = esc(t('shelf'))+'：'+(p.shelf?esc(p.shelf):'—')+' · '+esc(t('arrivalTime'))+'：<span class="num">'+esc(fmtDT(p.arrivalTime))+'</span>';
-      if(p.pickTime) sub += ' · '+esc(t('pickTime'))+'：<span class="num">'+esc(fmtDT(p.pickTime))+'</span>';
-      return '<div class="prow">'+
-        '<div class="prow-info">'+
-          '<div class="prow-name num">'+esc(p.trackingNo)+(p.name?' · <span style="color:var(--ink);font-weight:600">'+esc(p.name)+'</span>':'')+' '+statusBadge+'</div>'+
-          '<div class="prow-sub">'+sub+'</div>'+
+      const off = p.status==='picked';
+      const dt = fmtShortDT(p.arrivalTime);
+      const metaParts = [];
+      if(p.tail) metaParts.push('<span class="tag">'+esc(t('parcelTail'))+'</span> '+esc(p.tail));
+      if(p.note) metaParts.push(esc(p.note));
+      if(p.name) metaParts.push(esc(p.name));
+      return '<div class="p2'+(off?' off':'')+'">'+
+        '<div class="p2-main">'+
+          '<div class="p2-no num">'+esc(p.trackingNo)+'</div>'+
+          (metaParts.length?'<div class="p2-meta">'+metaParts.join(' · ')+'</div>':'')+
         '</div>'+
+        '<div class="p2-time">'+dt+'</div>'+
+        statusBadge+
+        '<div class="p2-num">'+esc(p.pickupNo||'—')+'</div>'+
         '<div class="prow-ops">'+
-          (p.status==='pending'
-            ? '<button class="btn btn-primary btn-sm" data-action="parcel-pick" data-id="'+esc(p.id)+'">'+ICONS.check+esc(t('markPicked'))+'</button>'
-            : '<button class="btn btn-ghost btn-sm" data-action="parcel-undo" data-id="'+esc(p.id)+'">'+esc(t('undoPick'))+'</button>')+
+          (off
+            ? '<button class="btn btn-ghost btn-sm" data-action="parcel-undo" data-id="'+esc(p.id)+'">'+esc(t('undoPick'))+'</button>'
+            : '<button class="btn btn-primary btn-sm" data-action="parcel-pick" data-id="'+esc(p.id)+'">'+ICONS.check+esc(t('markPicked'))+'</button>')+
           '<button class="icon-btn" data-action="parcel-del" data-id="'+esc(p.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
         '</div>'+
       '</div>';
@@ -1071,6 +1093,9 @@ function adminParcels(){
     '<div class="card card-pad">'+
       '<h3 style="margin-bottom:14px">'+esc(t('addParcel'))+'</h3>'+
       '<div class="field"><label>'+esc(t('trackingNo'))+' *</label><input type="text" id="pa-no" placeholder="'+esc(t('trackingPlaceholder'))+'" data-enter="parcel-add"></div>'+
+      '<div class="field"><label>'+esc(t('parcelTail'))+'</label><input type="text" id="pa-tail" placeholder="'+esc(t('parcelTailPh'))+'" data-enter="parcel-add"></div>'+
+      '<div class="field"><label>'+esc(t('parcelNote'))+'</label><input type="text" id="pa-note" placeholder="'+esc(t('parcelNotePh'))+'" data-enter="parcel-add"></div>'+
+      '<div class="field"><label>'+esc(t('parcelPickupNo'))+'</label><input type="text" id="pa-pickupno" placeholder="'+esc(t('parcelPickupNoPh'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('parcelName'))+'</label><input type="text" id="pa-name" placeholder="'+esc(t('parcelNamePh'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('shelfNo'))+'</label><input type="text" id="pa-shelf" placeholder="'+esc(t('shelfPlaceholder'))+'" data-enter="parcel-add"></div>'+
       '<div class="field"><label>'+esc(t('arrival'))+'</label><input type="datetime-local" id="pa-time" value="'+esc(curTime)+'"></div>'+
@@ -1088,16 +1113,19 @@ function adminParcels(){
 function addParcelFromForm(){
   const no = document.getElementById('pa-no').value.replace(/\s+/g,'').toUpperCase();
   const name = (document.getElementById('pa-name')||{}).value.trim();
+  const tail = (document.getElementById('pa-tail')||{}).value.trim();
+  const note = (document.getElementById('pa-note')||{}).value.trim();
+  const pickupNo = (document.getElementById('pa-pickupno')||{}).value.trim();
   const shelf = document.getElementById('pa-shelf').value.trim();
   const timeVal = document.getElementById('pa-time').value;
   const quick = document.getElementById('pa-quick').checked;
   if(!no){ toast(t('requireTracking')); return; }
   if(S.parcels.some(p=>p.trackingNo.toUpperCase()===no)){ toast(t('dupTracking')); return; }
   const arrivalTime = timeVal ? new Date(timeVal).toISOString() : new Date().toISOString();
-  S.parcels.push({id:uid(), trackingNo:no, name:name, shelf:shelf, arrivalTime:arrivalTime, status:'pending', pickTime:null});
+  S.parcels.push({id:uid(), trackingNo:no, name:name, tail:tail, note:note, pickupNo:pickupNo, shelf:shelf, arrivalTime:arrivalTime, status:'pending', pickTime:null});
   if(!saveParcels()){ toast(t('storageError')); return; }
   if(quick){ document.getElementById('pa-no').value=''; }
-  else{ document.getElementById('pa-no').value=''; document.getElementById('pa-name').value=''; document.getElementById('pa-shelf').value=''; }
+  else{ ['pa-no','pa-name','pa-tail','pa-note','pa-pickupno','pa-shelf'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; }); }
   render();
   toast(t('parcelAdded'));
 }
