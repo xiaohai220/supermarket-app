@@ -392,7 +392,7 @@ const I18N = {
     productsCount:'共 {n} 件商品',
     parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
     parcelName:'收件人昵称', parcelNamePh:'如：阿里妈妈',
-    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
+    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', plistPh:'搜昵称 / 单号 / 单号后四位 / 编号', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取走',
     arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号',
@@ -459,7 +459,7 @@ const I18N = {
     productsCount:'{n} items',
     parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
     parcelName:'Recipient nickname', parcelNamePh:'e.g. Auntie Li',
-    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
+    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', plistPh:'Search name / No. / last 4 / pickup No.', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up',
     arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.',
@@ -700,6 +700,7 @@ function consignCardHtml(c, cur){
 /* ===== 视图状态 ===== */
 const PS = { q:'', cat:'all', sort:'default' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
+const PL = { q:'', status:'all' }; // 客户快递列表筛选
 const PA = { filter:'all', q:'' };                 // 快递管理
 let ADMIN_OK = false;
 let FORM_PRODUCT_ID = null;
@@ -878,27 +879,46 @@ function viewParcels(){
     publicParcelList();
 }
 function publicParcelList(){
-  const list = S.parcels.slice().sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
-  if(!list.length) return '';
-  const rows = list.map(p=>{
-    const statusBadge = p.status==='picked' ? '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>' : '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
-    const off = p.status==='picked';
-    const metaParts = [];
-    if(p.tail) metaParts.push('<span class="tag">'+esc(t('parcelTail'))+'</span> '+esc(p.tail));
-    if(p.note) metaParts.push(esc(p.note));
-    if(p.name) metaParts.push(esc(p.name));
-    return '<div class="p2'+(off?' off':'')+'">'+
-      '<div class="p2-main">'+
-        '<div class="p2-no num">'+esc(p.trackingNo)+'</div>'+
-        (metaParts.length?'<div class="p2-meta">'+metaParts.join(' · ')+'</div>':'')+
-      '</div>'+
-      '<div class="p2-time">'+fmtShortDT(p.arrivalTime)+'</div>'+
-      statusBadge+
-      '<div class="p2-num">'+esc(p.pickupNo||'—')+'</div>'+
-    '</div>';
-  }).join('');
+  let list = S.parcels.slice().sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  const total = list.length;
+  if(PL.status && PL.status!=='all') list = list.filter(p=>p.status===PL.status);
+  if(PL.q){
+    const q = PL.q.trim().toLowerCase();
+    list = list.filter(p=>{
+      const no = (p.trackingNo||'').toLowerCase();
+      const last4 = no.slice(-4);
+      const name = (p.name||'').toLowerCase();
+      const pick = (p.pickupNo||'').toLowerCase();
+      return no.includes(q) || last4.includes(q) || name.includes(q) || pick===q || pick.includes(q);
+    });
+  }
+  const chips = [['all',t('filterAll')],['pending',t('statusPending')],['picked',t('statusPicked')]]
+    .map(x=>'<button class="chip '+(PL.status===x[0]?'on':'')+'" data-action="plist-filter" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
+  let rows;
+  if(!list.length){
+    rows = '<div class="empty" style="padding:22px 10px"><div class="e-ico">'+ICONS.box+'</div><p>'+esc(t('notFoundTitle'))+'</p></div>';
+  }else{
+    rows = list.map(p=>{
+      const statusBadge = p.status==='picked' ? '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>' : '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>';
+      const off = p.status==='picked';
+      const metaParts = [];
+      if(p.note) metaParts.push(esc(p.note));
+      if(p.name) metaParts.push(esc(p.name));
+      return '<div class="p2'+(off?' off':'')+'">'+
+        '<div class="p2-main">'+
+          '<div class="p2-no num">'+esc(p.trackingNo)+'</div>'+
+          (metaParts.length?'<div class="p2-meta">'+metaParts.join(' · ')+'</div>':'')+
+        '</div>'+
+        '<div class="p2-time">'+fmtShortDT(p.arrivalTime)+'</div>'+
+        statusBadge+
+        '<div class="p2-num">'+esc(p.pickupNo||'—')+'</div>'+
+      '</div>';
+    }).join('');
+  }
   return '<div class="card admin-panel" style="margin-top:16px">'+
-    '<div class="panel-head"><h3>'+esc(t('parcelAll'))+'</h3><span class="count num">'+esc(String(list.length))+'</span></div>'+
+    '<div class="panel-head"><h3>'+esc(t('parcelAll'))+'</h3><span class="count num">'+esc(String(list.length))+' / '+esc(String(total))+'</span></div>'+
+    '<div class="search-wrap" style="margin-bottom:8px">'+ICONS.search+'<input id="plist-search" data-action="plist-search" placeholder="'+esc(t('plistPh'))+'" value="'+esc(PL.q)+'"></div>'+
+    '<div class="chips" style="margin-bottom:10px">'+chips+'</div>'+
     rows+
   '</div>';
 }
@@ -1491,6 +1511,7 @@ function runAction(action, id, el){
       });
       break;
     case 'parcel-filter': PA.filter = id; render(); break;
+    case 'plist-filter': PL.status = id; render(); break;
     case 'parcel-search': PA.q = document.getElementById('pa-search').value; render(); break;
     /* 系统设置 */
     case 'settings-store-save': {
@@ -1588,6 +1609,17 @@ document.addEventListener('input', e=>{
     if(c) c.textContent = fmtCount(t('productsCount'),{n:list.length});
   }
   else if(act==='parcel-search'){ PA.q = t.value; render(); }
+  else if(act==='plist-search'){ PL.q = t.value;
+    const wrap = document.querySelector('.admin-panel .panel-head');
+    // 局部重渲染列表区域，避免输入框失焦
+    const card = t.closest('.admin-panel');
+    if(card){
+      const html = publicParcelList();
+      card.outerHTML = html;
+      const ni = document.getElementById('plist-search');
+      if(ni){ ni.focus(); ni.setSelectionRange(ni.value.length, ni.value.length); }
+    }
+  }
 });
 window.addEventListener('hashchange', render);
 
