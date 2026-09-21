@@ -272,10 +272,24 @@ async function main() {
     const onSale = api.S.consign.filter(c => c.status === 'on').length;
     check('3.5 待审核物品不进入客户在售列表', onSale === 0);
 
-    // 管理员审核上架
+    // 管理员审核上架（需先输入管理口令）
     api.go('#/admin?tab=consign'); api.render();
     api.runAction('consign-approve', api.S.consign[0].id, null);
+    api.setVal('pwd-input', '123456');
+    api.runAction('pwd-ok', '', null);
     check('3.6 管理员上架后状态变为 on', api.S.consign[0].status === 'on');
+
+    // 密码错误不上架（同一 api 内再加一条待审核物品测试）
+    api.S.consign.push({ id: 'g9', title: '密码测试物', price: 1, contact: '9', status: 'pending', createTime: '2026-01-01' });
+    api.runAction('consign-approve', 'g9', null);
+    api.setVal('pwd-input', 'wrong');
+    api.runAction('pwd-ok', '', null);
+    check('3.6b 密码错误上架被拒绝', api.S.consign.find(x=>x.id==='g9').status === 'pending');
+    // 用正确口令上架该条
+    api.runAction('consign-approve', 'g9', null);
+    api.setVal('pwd-input', '123456');
+    api.runAction('pwd-ok', '', null);
+    check('3.6c 密码正确后上架', api.S.consign.find(x=>x.id==='g9').status === 'on');
 
     // 客户在售列表现在能看到
     api.go('#/consign'); api.render();
@@ -297,8 +311,10 @@ async function main() {
 
     // 删除
     api.go('#/admin?tab=consign'); api.render();
-    api.runAction('consign-del', api.S.consign[0].id, null);
-    api.runAction('confirm-ok', '', null);
+    api.S.consign.slice().forEach(c=>{
+      api.runAction('consign-del', c.id, null);
+      api.runAction('confirm-ok', '', null);
+    });
     check('3.11 删除寄售记录后归零', api.S.consign.length === 0);
 
     // 持久化键

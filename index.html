@@ -397,6 +397,7 @@ const I18N = {
     consignRequireTitle:'请填写物品名称', consignRequirePrice:'请填写正确的价格', consignRequireContact:'请填写联系电话',
     consignNoResult:'未找到该联系电话的寄售记录', consignSubmitTime:'提交时间', consignContact:'联系电话', consignConsignor:'寄售人',
     consignBuy:'我要购买', consignBuyPhone:'买家手机号', consignBuyPhonePh:'请输入您的手机号', consignBuyPhoneRequired:'请填写买家手机号', consignBuySubmitted:'已提交，卖家会联系您', consignBuyers:'买家联系',
+    consignApprovePwd:'上架需验证管理口令', consignBuyersPwd:'查看买家手机号需验证管理口令', consignViewBuyers:'查看买家手机号',
     consignPriceUnit:'价格',
     adminTitle:'管理模式', adminDesc:'本机维护入口，客户界面不显示',
     loginTitle:'输入管理口令', loginBtn:'进入', wrongPassword:'口令不正确',
@@ -459,6 +460,7 @@ const I18N = {
     consignRequireTitle:'Please enter an item name', consignRequirePrice:'Please enter a valid price', consignRequireContact:'Please enter a contact phone',
     consignNoResult:'No consignment found for this phone number', consignSubmitTime:'Submitted', consignContact:'Phone', consignConsignor:'Consignor',
     consignBuy:'I want to buy', consignBuyPhone:'Buyer phone', consignBuyPhonePh:'Enter your phone number', consignBuyPhoneRequired:'Please enter buyer phone', consignBuySubmitted:'Sent, the seller will contact you', consignBuyers:'Buyers',
+    consignApprovePwd:'Enter staff password to list', consignBuyersPwd:'Enter staff password to reveal buyer phones', consignViewBuyers:'View buyer phones',
     consignPriceUnit:'Price',
     adminTitle:'Staff Mode', adminDesc:'Local maintenance, hidden from customers',
     loginTitle:'Enter staff password', loginBtn:'Enter', wrongPassword:'Incorrect password',
@@ -568,6 +570,19 @@ function confirmDlg(msg, onOk){
     '</div>'
   );
 }
+/* 密码确认弹窗：onOk 在密码正确时调用 */
+let pwdCb = null;
+function pwdPrompt(title, onOk){
+  pwdCb = onOk;
+  openModal(
+    '<h3>'+esc(title)+'</h3>'+
+    '<div class="field"><label>'+esc(t('adminPass'))+'</label><input type="password" id="pwd-input" autocomplete="off" autofocus></div>'+
+    '<div class="modal-actions">'+
+      '<button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('cancel'))+'</button>'+
+      '<button class="btn btn-primary" data-action="pwd-ok">'+esc(t('confirm'))+'</button>'+
+    '</div>'
+  );
+}
 
 /* ===== 图片压缩 ===== */
 let pendingImg = '';   // 正在编辑的商品图片(dataURL)
@@ -589,7 +604,7 @@ function readImage(file, cb){
 }
 
 /* ===== 二手寄售：客户视图状态 ===== */
-const CS = { query:'', queried:false, results:null, publishing:false };  // 客户"查询我的寄售" / 是否在发布表单页
+const CS = { query:'', queried:false, results:null, publishing:false, showBuyers:false };  // 客户"查询我的寄售" / 是否在发布表单页
 let FORM_CONSIGN_IMG = '';
 
 function consignStatusBadge(st){
@@ -834,12 +849,24 @@ function viewConsign(){
   let queryHtml = '';
   if(CS.queried){
     if(CS.results && CS.results.length){
+      const hasBuyers = CS.results.some(c=>Array.isArray(c.buyers)&&c.buyers.length);
+      let buyerSection = '';
+      if(hasBuyers){
+        if(CS.showBuyers){
+          buyerSection = CS.results.filter(c=>Array.isArray(c.buyers)&&c.buyers.length)
+            .map(c=>'<div class="prow-sub" style="color:#ff6b35">'+ICONS.info+' <b>'+esc(c.title)+'</b>：'+
+              c.buyers.map(b=>'<span class="num">'+esc(b.phone)+'</span> <span style="opacity:.7">('+esc(fmtDT(b.time))+')</span>').join('， ')+'</div>').join('');
+        }else{
+          buyerSection = '<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" data-action="consign-view-buyers">'+ICONS.lock+esc(t('consignViewBuyers'))+'</button></div>';
+        }
+      }
       queryHtml = '<div class="card admin-panel" style="margin-top:16px"><h3 style="margin-bottom:10px">'+esc(t('consignQueryTitle'))+'</h3>'+
         CS.results.map(c=>'<div class="prow">'+
           '<div class="prow-info">'+
             '<div class="prow-name">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</div>'+
             '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+(c.desc?' · '+esc(c.desc):'')+'</div>'+
           '</div></div>').join('')+
+        buyerSection+
         '</div>';
     }else{
       queryHtml = '<div class="card p-result"><div class="empty" style="padding:20px 10px"><div class="e-ico">'+ICONS.search+'</div><h3>'+esc(t('consignNoResult'))+'</h3></div></div>';
@@ -1195,6 +1222,13 @@ function runAction(action, id, el){
     }
     case 'modal-cancel': closeModal(); break;
     case 'confirm-ok': { const cb=confirmCb; confirmCb=null; closeModal(); if(cb) cb(); break; }
+    case 'pwd-ok': {
+      const v = (document.getElementById('pwd-input')||{}).value||'';
+      const cb = pwdCb; pwdCb = null;
+      if(v !== S.settings.adminPass){ toast(t('passMismatch')); break; }
+      closeModal(); if(cb) cb();
+      break;
+    }
     case 'admin-tab': go('#/admin?tab='+id); break;
     /* 商品客户视图 */
     case 'prod-cat': PS.cat = id; render(); break;
@@ -1284,6 +1318,7 @@ function runAction(action, id, el){
       const k = v.trim().toLowerCase();
       CS.queried = true;
       CS.query = v;
+      CS.showBuyers = false;
       CS.results = k ? S.consign.filter(c=>(c.contact||'').toLowerCase().includes(k)) : [];
       render();
       break;
@@ -1293,7 +1328,15 @@ function runAction(action, id, el){
     /* 寄售管理 */
     case 'consign-filter': CSM.filter = id; render(); break;
     case 'consign-approve': {
-      const c=S.consign.find(x=>x.id===id); if(c){ c.status='on'; saveConsign(); render(); }
+      pwdPrompt(t('consignApprovePwd'), ()=>{
+        const c=S.consign.find(x=>x.id===id); if(c){ c.status='on'; saveConsign(); render(); }
+      });
+      break;
+    }
+    case 'consign-view-buyers': {
+      pwdPrompt(t('consignBuyersPwd'), ()=>{
+        CS.showBuyers = true; render();
+      });
       break;
     }
     case 'consign-mark-sold': {
