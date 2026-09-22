@@ -363,6 +363,7 @@ body.night .barcode{opacity:.9}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -461,6 +462,7 @@ const I18N = {
     requireTracking:'请填写运单号', dupTracking:'该运单号已登记', parcelAdded:'已登记', parcelUpdated:'已更新',
     batchAdd:'批量快速添加', batchAddHint:'每行一个运单号（回车分隔，逗号也可）', batchNotePh:'如：9栋3单元 · 小李', batchAddBtn:'一次性登记全部', batchDone:'成功添加 {a} 个，跳过重复 {d} 个',
     batchPickupStart:'取件编号起始（留空则不填）', batchPickupPh:'如：1',
+    xlsxPick:'导入 Excel 批量登记', xlsxHint:'支持 .xlsx/.csv，列：快递单号、尾号、编号、备注', xlsxDone:'成功导入 {a} 单，跳过重复 {d} 单', xlsxFail:'导入失败：',
     ocrPick:'从照片识别单号', ocrReading:'正在识别：', ocrDone:'识别到 {n} 个单号，已填入下方', ocrFail:'识别失败：',
     consignPending:'待审核', consignOn:'在售', consignSold:'已售出',
     consignApprove:'上架', consignMarkSold:'标记售出', consignListEmpty:'暂无寄售记录',
@@ -799,6 +801,11 @@ function render(){
     if(pick && fi && !pick.dataset.wired){ pick.dataset.wired='1';
       pick.addEventListener('click',()=>fi.click());
       fi.addEventListener('change',e=>{ ocrPickFiles(Array.from(e.target.files||[])); e.target.value=''; });
+      const xp=document.getElementById('xlsx-pick'); const xf=document.getElementById('xlsx-file');
+      if(xp && xf && !xp.dataset.wired){ xp.dataset.wired='1';
+        xp.addEventListener('click',()=>xf.click());
+        xf.addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importXlsx(f); e.target.value=''; });
+      }
     }
   },0);
   const r = route();
@@ -1292,6 +1299,8 @@ function adminParcels(){
       '<div class="field"><label>'+esc(t('batchPickupStart'))+'</label><input type="text" id="pa-batch-pickup" placeholder="'+esc(t('batchPickupPh'))+'"></div>'+
       '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" data-action="parcel-batch">'+ICONS.plus+esc(t('batchAddBtn'))+'</button><button class="btn btn-ghost" id="ocr-pick">'+'📷 '+esc(t('ocrPick'))+'</button></div>'+
       '<input type="file" id="ocr-file" accept="image/*" multiple style="display:none">'+
+      '<input type="file" id="xlsx-file" accept=".xlsx,.xls,.csv" style="display:none">'+
+      '<div style="margin-top:8px"><button class="btn btn-ghost" id="xlsx-pick">📊 '+esc(t('xlsxPick'))+'</button><div class="hint">'+esc(t('xlsxHint'))+'</div></div>'+
       '<div id="ocr-status" class="hint" style="margin-top:6px"></div>'+
     '</div>'+
     '<div class="card admin-panel">'+
@@ -1329,6 +1338,36 @@ function addParcelFromForm(){
   toast(t('parcelAdded'));
 }
 
+
+function parseCell(v){ return (v==null?'':String(v)).trim(); }
+async function importXlsx(file){
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    let hi=-1, cNo=-1,cPick=-1,cNote=-1;
+    rows.forEach((r,i)=>{ if(hi>=0)return;
+      const cells=r.map(parseCell);
+      cells.forEach((c,j)=>{ if(/快递单号|运单号|单号/.test(c))cNo=j; if(/编号|取件号/.test(c))cPick=j; if(/备注|说明/.test(c))cNote=j; });
+      if(cNo>=0) hi=i;
+    });
+    if(hi<0){ cNo=0; cPick=1; cNote=2; }
+    let added=0,dup=0;
+    const start=(hi<0?0:hi+1);
+    for(let i=start;i<rows.length;i++){
+      const r=rows[i]; if(!r||!r.length)continue;
+      const no=parseCell(r[cNo]).replace(/\s+/g,'').toUpperCase();
+      if(no.length<6) continue;
+      if(S.parcels.some(p=>p.trackingNo.toUpperCase()===no)){dup++;continue;}
+      S.parcels.push({id:uid(), trackingNo:no, name:'', note:cNote>=0?parseCell(r[cNote]):'', pickupNo:cPick>=0?parseCell(r[cPick]):'', arrivalTime:new Date().toISOString(), status:'pending', pickTime:null});
+      added++;
+    }
+    if(!saveParcels()){ alert(t('storageError')); return; }
+    render();
+    alert(t('xlsxDone').replace('{a}',added).replace('{d}',dup));
+  }catch(e){ alert(t('xlsxFail')+e.message); }
+}
 async function ocrPickFiles(files){
   const ta=document.getElementById('pa-batch');
   const st=document.getElementById('ocr-status');
