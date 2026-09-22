@@ -647,7 +647,7 @@ function load(){
     LS.set(KEYS.settings, S.settings);
   }
   lang = (S.settings.lang==='en') ? 'en' : 'zh';
-  seedDemoOnce();
+  if(!USE_REMOTE) seedDemoOnce(); // 联网模式以服务器数据为准，不在本地种示例
 }
 function seedDemoOnce(){
   if(typeof window!=='undefined' && window.__SM_TEST__) return;
