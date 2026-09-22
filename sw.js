@@ -1,5 +1,5 @@
 /* PWA Service Worker：网页走网络优先（保证更新即时生效），静态资源缓存兜底 */
-const CACHE = 'supermarket-v3';
+const CACHE = 'supermarket-v4';
 const ASSETS = [
   './',
   './index.html',
