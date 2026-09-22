@@ -1296,6 +1296,7 @@ function adminParcels(){
             ? '<button class="btn btn-ghost btn-sm" data-action="parcel-undo" data-id="'+esc(p.id)+'">'+esc(t('undoPick'))+'</button>'
             : '<button class="btn btn-primary btn-sm" data-action="parcel-pick" data-id="'+esc(p.id)+'">'+ICONS.check+esc(t('markPicked'))+'</button>')+
           (!off ? '<button class="btn btn-ghost btn-sm" data-action="parcel-domestic-toggle" data-id="'+esc(p.id)+'" title="'+esc(t('toggleDomestic'))+'">'+(p.status==='domestic'?'↩ '+esc(t('statusPending')):'🌏 '+esc(t('statusDomestic')))+'</button>' : '')+
+          (!off ? '<button class="btn btn-ghost btn-sm" data-action="parcel-domestic-toggle" data-id="'+esc(p.id)+'" title="'+esc(t('toggleDomestic'))+'">'+(p.status==='domestic'?'↩ '+esc(t('statusPending')):'🌏 '+esc(t('statusDomestic')))+'</button>' : '')+
           (!off && p.requested ? '<button class="btn btn-ghost btn-sm" data-action="parcel-reject" data-id="'+esc(p.id)+'">'+esc(t('rejectRequest'))+'</button>' : '')+
           '<button class="icon-btn" data-action="parcel-edit-open" data-id="'+esc(p.id)+'" title="'+esc(t('editParcel'))+'">'+(ICONS.edit||'✎')+'</button>'+
           '<button class="icon-btn" data-action="parcel-del" data-id="'+esc(p.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
