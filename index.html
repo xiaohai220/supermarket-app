@@ -980,6 +980,15 @@ function viewParcels(){
     resultHtml+
     publicParcelList();
 }
+function consignResultsHtml(){
+  const cur = S.settings && S.settings.currency || '¥';
+  if(CS.results && CS.results.length){
+    return '<div class="card admin-panel" style="margin-top:16px"><h3 style="margin-bottom:10px">'+esc(t('consignQueryTitle'))+'</h3>'+
+      CS.results.map(c=>'<div class="prow"><div class="prow-info"><div class="prow-name">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</div>'+
+      '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+(c.desc?' · '+esc(c.desc):'')+'</div></div></div>').join('')+'</div>';
+  }
+  return '<div class="card p-result"><div class="empty" style="padding:20px 10px"><div class="e-ico">'+ICONS.search+'</div><h3>'+esc(t('consignNoResult'))+'</h3></div></div>';
+}
 function publicParcelList(){
   let list = S.parcels.slice();
   const total = list.length;
@@ -1124,10 +1133,10 @@ function viewConsign(){
     '<div class="card card-pad" style="margin-top:16px">'+
       '<h3 style="margin-bottom:12px">'+esc(t('consignQueryTitle'))+'</h3>'+
       '<div class="query-row">'+
-        '<div class="search-wrap">'+ICONS.search+'<input id="cs-query" data-enter="consign-query" placeholder="'+esc(t('consignQueryPlaceholder'))+'"></div>'+
+        '<div class="search-wrap">'+ICONS.search+'<input id="cs-query" data-action="consign-query" data-enter="consign-query" placeholder="'+esc(t('consignQueryPlaceholder'))+'"></div>'+
         '<button class="btn btn-primary" data-action="consign-query">'+ICONS.search+esc(t('consignQueryBtn'))+'</button>'+
       '</div>'+
-      queryHtml+
+      '<div id="cs-results-area">'+queryHtml+'</div>'+
     '</div>'+
     '<button class="xy-fab" data-action="consign-publish" title="'+esc(t('consignSubmit'))+'">'+ICONS.plus+'</button>';
 }
@@ -1383,7 +1392,7 @@ function adminParcelListCardHtml(){
   return '<div class="card admin-panel">'+
       '<div class="panel-head"><h3>'+esc(t('parcelList'))+'</h3><span class="count num">'+esc(fmtCount(t('parcelCount'),{n:S.parcels.length,p:pendingCount()}))+'</span></div>'+
       '<div class="chips" style="margin-bottom:10px">'+filters+'</div>'+
-      '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-enter="parcel-search" placeholder="'+esc(t('parcelSearchPh'))+'" value="'+esc(PA.q)+'"></div>'+
+      '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-action="parcel-search" data-enter="parcel-search" placeholder="'+esc(t('parcelSearchPh'))+'" value="'+esc(PA.q)+'"></div>'+
       '<div id="pa-list-area">'+rows+pagerHtml(PA.page, totalPages, 'parcel-page')+'</div>'+
     '</div>';
 }
@@ -1928,7 +1937,7 @@ function runAction(action, id, el){
     case 'plist-sort': if(PL.sort===id){ PL.dir = (PL.dir==='asc'?'desc':'asc'); } else { PL.sort = id; PL.dir = (id==='pickup'?'asc':'desc'); } PL.page = 1; render(); break;
     case 'parcel-page': PA.page = parseInt(id,10)||1; render(); break;
     case 'plist-page': PL.page = parseInt(id,10)||1; render(); break;
-    case 'parcel-search': PA.q = document.getElementById('pa-search').value; PA.page = 1; render(); break;
+    case 'parcel-search': { PA.q = (document.getElementById('pa-search')||{}).value||PA.q; PA.page = 1; const area=document.getElementById('pa-list-area'); if(area) area.innerHTML = adminParcelListRowsHtml(); else render(); break; }
     /* 系统设置 */
     case 'settings-store-save': {
       const zh = document.getElementById('st-name-zh').value.trim();
@@ -2045,6 +2054,13 @@ document.addEventListener('input', e=>{
     if(area){
       area.innerHTML = adminParcelListRowsHtml();
     } else { render(); }
+  }
+  else if(act==='consign-query'){
+    const v=t.value; const k=v.trim().toLowerCase();
+    CS.queried=true; CS.query=v; CS.showBuyers=false;
+    CS.results = k ? S.consign.filter(c=>(c.contact||'').toLowerCase().includes(k)) : [];
+    const area=document.getElementById('cs-results-area');
+    if(area) area.innerHTML = consignResultsHtml(); else render();
   }
   else if(act==='plist-search' || act==='plist-pickup-search'){
     if(act==='plist-search') PL.q = t.value; else PL.pickup = t.value;
