@@ -1,4 +1,4 @@
-/* PWA Service Worker：网页走网络优先（保证更新即时生效），静态资源缓存兜底 */
+﻿/* PWA Service Worker锛氱綉椤佃蛋缃戠粶浼樺厛锛堜繚璇佹洿鏂板嵆鏃剁敓鏁堬級锛岄潤鎬佽祫婧愮紦瀛樺厹搴?*/
 const CACHE = 'supermarket-v4';
 const ASSETS = [
   './',
@@ -20,15 +20,13 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  // 汇率接口始终走网络
-  if (url.hostname.includes('er-api.com')) return;
-  // 只处理 GET
+  // 姹囩巼鎺ュ彛濮嬬粓璧扮綉缁?  if (url.hostname.includes('er-api.com')) return;
+  // 鍙鐞?GET
   if (e.request.method !== 'GET') return;
-  // 数据接口始终走网络，绝不缓存
+  // 鏁版嵁鎺ュ彛濮嬬粓璧扮綉缁滐紝缁濅笉缂撳瓨
   if (url.pathname.startsWith('/api/')) return;
 
-  // 页面导航（HTML）：网络优先，失败再用缓存
-  if (e.request.mode === 'navigate') {
+  // 椤甸潰瀵艰埅锛圚TML锛夛細缃戠粶浼樺厛锛屽け璐ュ啀鐢ㄧ紦瀛?  if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).then((res) => {
         const copy = res.clone();
@@ -39,8 +37,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // 其余静态资源：缓存优先，后台更新
-  e.respondWith(
+  // 鍏朵綑闈欐€佽祫婧愶細缂撳瓨浼樺厛锛屽悗鍙版洿鏂?  e.respondWith(
     caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
       const copy = res.clone();
       caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
@@ -48,3 +45,4 @@ self.addEventListener('fetch', (e) => {
     }).catch(() => caches.match('./index.html')))
   );
 });
+
