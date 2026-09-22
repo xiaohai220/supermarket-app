@@ -1921,7 +1921,12 @@ document.addEventListener('input', e=>{
     const c = document.getElementById('prod-count');
     if(c) c.textContent = fmtCount(t('productsCount'),{n:list.length});
   }
-  else if(act==='parcel-search'){ PA.q = t.value; render(); }
+  else if(act==='parcel-search'){
+    PA.q = t.value; PA.page = 1;
+    render();
+    const ni = document.getElementById('pa-search');
+    if(ni){ ni.focus(); ni.setSelectionRange(ni.value.length, ni.value.length); }
+  }
   else if(act==='plist-search' || act==='plist-pickup-search'){
     if(act==='plist-search') PL.q = t.value; else PL.pickup = t.value;
     PL.page = 1;
