@@ -1070,7 +1070,6 @@ function viewConsign(){
           '<div class="field"><label>'+esc(t('consignContactLabel'))+'</label><input type="text" id="cs-contact" data-enter="consign-submit"></div>'+
         '</div>'+
         '<div class="field"><label>'+esc(t('consignorLabel'))+'</label><input type="text" id="cs-consignor"></div>'+
-        '<div class="field"><label>'+esc(t('consignPwdLabel'))+'</label><input type="password" id="cs-pwd" placeholder="'+esc(t('consignPwdPh'))+'" autocomplete="new-password"></div>'+
         '<div class="field"><label>'+esc(t('consignPhotoLabel'))+'</label>'+prev+
           '<div style="display:flex;gap:8px">'+
             '<button class="btn btn-ghost btn-sm" data-action="consign-img-pick">'+ICONS.upload+esc(t('chooseImage'))+'</button>'+
@@ -1091,24 +1090,12 @@ function viewConsign(){
   let queryHtml = '';
   if(CS.queried){
     if(CS.results && CS.results.length){
-      const hasBuyers = CS.results.some(c=>Array.isArray(c.buyers)&&c.buyers.length);
-      let buyerSection = '';
-      if(hasBuyers){
-        if(CS.showBuyers){
-          buyerSection = CS.results.filter(c=>Array.isArray(c.buyers)&&c.buyers.length)
-            .map(c=>'<div class="prow-sub" style="color:#ff6b35">'+ICONS.info+' <b>'+esc(c.title)+'</b>：'+
-              c.buyers.map(b=>'<span class="num">'+esc(b.phone)+'</span> <span style="opacity:.7">('+esc(fmtDT(b.time))+')</span>').join('， ')+'</div>').join('');
-        }else{
-          buyerSection = '<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" data-action="consign-view-buyers-open">'+ICONS.lock+esc(t('consignViewBuyers'))+'</button></div>';
-        }
-      }
       queryHtml = '<div class="card admin-panel" style="margin-top:16px"><h3 style="margin-bottom:10px">'+esc(t('consignQueryTitle'))+'</h3>'+
         CS.results.map(c=>'<div class="prow">'+
           '<div class="prow-info">'+
             '<div class="prow-name">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</div>'+
             '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+(c.desc?' · '+esc(c.desc):'')+'</div>'+
           '</div></div>').join('')+
-        buyerSection+
         '</div>';
     }else{
       queryHtml = '<div class="card p-result"><div class="empty" style="padding:20px 10px"><div class="e-ico">'+ICONS.search+'</div><h3>'+esc(t('consignNoResult'))+'</h3></div></div>';
@@ -1621,7 +1608,7 @@ function runAction(action, id, el){
         '</div>'+
         '<div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">'+
           '<button class="btn btn-ghost" data-action="modal-cancel">'+esc(t('close'))+'</button>'+
-          (c.status==='on'?'<button class="btn btn-primary" data-action="consign-buy" data-id="'+esc(c.id)+'">'+ICONS.tag+esc(t('consignBuy'))+'</button>':'')+
+
         '</div>'
       );
       break;
@@ -1658,12 +1645,10 @@ function runAction(action, id, el){
       const price = parseFloat((document.getElementById('cs-price')||{}).value);
       const contact = ((document.getElementById('cs-contact')||{}).value||'').trim();
       const consignor = ((document.getElementById('cs-consignor')||{}).value||'').trim();
-      const pwd = ((document.getElementById('cs-pwd')||{}).value||'').trim();
       if(!title.trim()){ toast(t('consignRequireTitle')); break; }
       if(isNaN(price) || price<0){ toast(t('consignRequirePrice')); break; }
       if(!contact){ toast(t('consignRequireContact')); break; }
-      if(!pwd){ toast(t('consignPwdRequired')); break; }
-      S.consign.push({ id:uid(), title:title.trim(), desc:desc.trim(), price:price, contact:contact, consignor:consignor, pwd:pwd, photo:FORM_CONSIGN_IMG, status:'pending', createTime:new Date().toISOString(), soldTime:null });
+      S.consign.push({ id:uid(), title:title.trim(), desc:desc.trim(), price:price, contact:contact, consignor:consignor, photo:FORM_CONSIGN_IMG, status:'pending', createTime:new Date().toISOString(), soldTime:null });
       FORM_CONSIGN_IMG = '';
       if(!saveConsign()){ toast(t('storageError')); break; }
       toast(t('consignSubmitted'));
