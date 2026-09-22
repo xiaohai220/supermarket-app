@@ -460,6 +460,7 @@ const I18N = {
     filterAll:'全部', markPicked:'标记已取走', undoPick:'撤销标记', noParcels:'暂无快递记录',
     requireTracking:'请填写运单号', dupTracking:'该运单号已登记', parcelAdded:'已登记', parcelUpdated:'已更新',
     batchAdd:'批量快速添加', batchAddHint:'每行一个运单号（回车分隔，逗号也可）', batchNotePh:'如：9栋3单元 · 小李', batchAddBtn:'一次性登记全部', batchDone:'成功添加 {a} 个，跳过重复 {d} 个',
+    batchPickupStart:'取件编号起始（留空则不填）', batchPickupPh:'如：1',
     ocrPick:'从照片识别单号', ocrReading:'正在识别：', ocrDone:'识别到 {n} 个单号，已填入下方', ocrFail:'识别失败：',
     consignPending:'待审核', consignOn:'在售', consignSold:'已售出',
     consignApprove:'上架', consignMarkSold:'标记售出', consignListEmpty:'暂无寄售记录',
@@ -1288,6 +1289,7 @@ function adminParcels(){
       '<h3 style="margin-bottom:6px">'+esc(t('batchAdd'))+'</h3>'+
       '<div class="field"><label>'+esc(t('batchAddHint'))+'</label><textarea id="pa-batch" rows="6" placeholder="YT259347025\nYT2550260285\nSF1234567890"></textarea></div>'+
       '<div class="field"><label>'+esc(t('parcelName'))+' / '+esc(t('parcelNote'))+'</label><input type="text" id="pa-batch-note" placeholder="'+esc(t('batchNotePh'))+'"></div>'+
+      '<div class="field"><label>'+esc(t('batchPickupStart'))+'</label><input type="text" id="pa-batch-pickup" placeholder="'+esc(t('batchPickupPh'))+'"></div>'+
       '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" data-action="parcel-batch">'+ICONS.plus+esc(t('batchAddBtn'))+'</button><button class="btn btn-ghost" id="ocr-pick">'+'📷 '+esc(t('ocrPick'))+'</button></div>'+
       '<input type="file" id="ocr-file" accept="image/*" multiple style="display:none">'+
       '<div id="ocr-status" class="hint" style="margin-top:6px"></div>'+
@@ -1352,10 +1354,13 @@ function addParcelsBatch(){
   const lines = (ta.value||'').split(/[\n,，;；]+/).map(x=>x.trim().replace(/\s+/g,'').toUpperCase()).filter(Boolean);
   if(!lines.length){ toast(t('requireTracking')); return; }
   const now = new Date().toISOString();
+  const pickupStartRaw = (document.getElementById('pa-batch-pickup')||{}).value.trim();
+  let pickupSeq = parseInt(pickupStartRaw,10); if(isNaN(pickupSeq)) pickupSeq = null;
   let added=0, dup=0;
   lines.forEach(no=>{
     if(S.parcels.some(p=>p.trackingNo.toUpperCase()===no)){ dup++; return; }
-    S.parcels.push({id:uid(), trackingNo:no, name:noteShared, note:'', pickupNo:'', arrivalTime:now, status:'pending', pickTime:null});
+    const pickupNo = pickupSeq===null ? '' : String(pickupSeq++);
+    S.parcels.push({id:uid(), trackingNo:no, name:noteShared, note:'', pickupNo:pickupNo, arrivalTime:now, status:'pending', pickTime:null});
     added++;
   });
   if(!saveParcels()){ toast(t('storageError')); return; }
