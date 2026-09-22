@@ -42,8 +42,24 @@ const handler = (req, res) => {
       req.on('data', c => { body += c; if(body.length>5e6) req.destroy(); });
       req.on('end', () => {
         try{
-          const obj = JSON.parse(body);
-          writeState(obj);
+          const incoming = JSON.parse(body);
+          const cur = readState();
+          // 并发合并：按 id 合并数组，避免"后写覆盖先写"导致整批数据丢失
+          const idArrays = ['products','parcels','consign','consignHistory'];
+          for(const key of idArrays){
+            if(Array.isArray(incoming[key])){
+              const map = new Map();
+              (cur[key]||[]).forEach(it => { if(it && it.id!=null) map.set(String(it.id), it); });
+              incoming[key].forEach(it => { if(it && it.id!=null) map.set(String(it.id), it); });
+              cur[key] = Array.from(map.values());
+            }
+          }
+          // 设置项深合并
+          if(incoming.settings && typeof incoming.settings==='object'){
+            cur.settings = Object.assign({}, cur.settings, incoming.settings);
+            if(Array.isArray(incoming.settings.categories)) cur.settings.categories = incoming.settings.categories;
+          }
+          writeState(cur);
           res.writeHead(200, {'Content-Type':'application/json'});
           res.end('{"ok":true}');
         }catch(e){
