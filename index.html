@@ -1384,9 +1384,64 @@ function adminParcelListCardHtml(){
       '<div class="panel-head"><h3>'+esc(t('parcelList'))+'</h3><span class="count num">'+esc(fmtCount(t('parcelCount'),{n:S.parcels.length,p:pendingCount()}))+'</span></div>'+
       '<div class="chips" style="margin-bottom:10px">'+filters+'</div>'+
       '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-action="parcel-search" data-enter="parcel-search" placeholder="'+esc(t('parcelSearchPh'))+'" value="'+esc(PA.q)+'"></div>'+
-      rows+
-      pagerHtml(PA.page, totalPages, 'parcel-page')+
+      '<div id="pa-list-area">'+rows+pagerHtml(PA.page, totalPages, 'parcel-page')+'</div>'+
     '</div>';
+}
+function adminParcelListRowsHtml(){
+  const list = S.parcels.slice();
+  const filtered = list.filter(p=>{
+    if(PA.filter==='pending' && p.status!=='pending') return false;
+    if(PA.filter==='picked' && p.status!=='picked') return false;
+    if(PA.q){
+      const q=PA.q.toLowerCase();
+      const hit = (p.trackingNo||'').toLowerCase().includes(q)
+        || (p.pickupNo||'').toLowerCase().includes(q)
+        || (p.name||'').toLowerCase().includes(q);
+      if(!hit) return false;
+    }
+    return true;
+  }).sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  if(PA.page > totalPages) PA.page = totalPages;
+  if(PA.page < 1) PA.page = 1;
+  const pageList = filtered.slice((PA.page-1)*PAGE_SIZE, PA.page*PAGE_SIZE);
+  let rows;
+  if(!filtered.length){
+    rows = '<div class="empty" style="padding:30px 12px"><div class="e-ico">'+ICONS.box+'</div><h3>'+esc(t('noParcels'))+'</h3></div>';
+  }else{
+    rows = pageList.map(p=>{
+      let statusBadge;
+      if(p.status==='picked'){ statusBadge = '<span class="badge b-done">'+esc(t('statusPicked'))+'</span>'; }
+      else if(p.status==='domestic'){ statusBadge = '<span class="badge b-ok">'+esc(t('statusDomestic'))+'</span>'; }
+      else if(p.requested){ statusBadge = '<span class="badge b-review">'+esc(t('statusReview'))+'</span>'; }
+      else{ statusBadge = '<span class="badge b-wait">'+esc(t('statusPending'))+'</span>'; }
+      const off = p.status==='picked';
+      const dt = fmtShortDT(p.arrivalTime);
+      const metaParts = [];
+      if(p.tail) metaParts.push('<span class="tag">'+esc(t('parcelTail'))+'</span> '+esc(p.tail));
+      if(p.note) metaParts.push(esc(p.note));
+      if(p.name) metaParts.push(esc(p.name));
+      if(p.requestTime) metaParts.push('<span class="tag">'+esc(t('requestTime'))+' '+esc(fmtDT(p.requestTime))+'</span>');
+      return '<div class="p2'+(off?' off':'')+'">'+
+        '<div class="p2-main">'+
+          '<div class="p2-no num">'+esc(p.trackingNo)+(p.requested?' <span class="badge b-review" style="margin-left:6px">'+esc(t('requestBadge'))+'</span>':'')+'</div>'+
+          (metaParts.length?'<div class="p2-meta">'+metaParts.join(' · ')+'</div>':'')+
+        '</div>'+
+        '<div class="p2-time">'+dt+'</div>'+
+        statusBadge+
+        '<div class="p2-num">'+esc(p.pickupNo||'—')+'</div>'+
+        '<div class="prow-ops">'+
+          (off
+            ? '<button class="btn btn-ghost btn-sm" data-action="parcel-undo" data-id="'+esc(p.id)+'">'+esc(t('undoPick'))+'</button>'
+            : '<button class="btn btn-primary btn-sm" data-action="parcel-pick" data-id="'+esc(p.id)+'">'+ICONS.check+esc(t('markPicked'))+'</button>')+
+          (!off && p.requested ? '<button class="btn btn-ghost btn-sm" data-action="parcel-reject" data-id="'+esc(p.id)+'">'+esc(t('rejectRequest'))+'</button>' : '')+
+          '<button class="icon-btn" data-action="parcel-edit-open" data-id="'+esc(p.id)+'" title="'+esc(t('editParcel'))+'">'+(ICONS.edit||'✎')+'</button>'+
+          '<button class="icon-btn" data-action="parcel-del" data-id="'+esc(p.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+  return rows + pagerHtml(PA.page, totalPages, 'parcel-page');
 }
 function pagerHtml(page, total, act){
   if(total<=1) return '';
@@ -1986,12 +2041,9 @@ document.addEventListener('input', e=>{
   }
   else if(act==='parcel-search'){
     PA.q = t.value; PA.page = 1;
-    const card = t.closest('.admin-panel');
-    if(card){
-      const html = adminParcelListCardHtml();
-      card.outerHTML = html;
-      const ni = document.getElementById('pa-search');
-      if(ni){ ni.focus(); ni.setSelectionRange(ni.value.length, ni.value.length); }
+    const area = document.getElementById('pa-list-area');
+    if(area){
+      area.innerHTML = adminParcelListRowsHtml();
     } else { render(); }
   }
   else if(act==='plist-search' || act==='plist-pickup-search'){
