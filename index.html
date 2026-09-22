@@ -778,7 +778,7 @@ function consignCardHtml(c, cur){
 /* ===== 视图状态 ===== */
 const PS = { q:'', cat:'all', sort:'default', stock:'all' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
-const PL = { q:'', pickup:'', status:'all', page:1, date:'', sort:'pickup' }; // 客户快递列表筛选
+const PL = { q:'', pickup:'', status:'all', page:1, date:'', sort:'pickup', dir:'asc' }; // 客户快递列表筛选
 const PA = { filter:'all', q:'', page:1 };                 // 快递管理
 const PAGE_SIZE = 10;
 let ADMIN_OK = false;
@@ -1002,15 +1002,17 @@ function publicParcelList(){
     const pk = PL.pickup.trim().toLowerCase();
     list = list.filter(p=> (p.pickupNo||'').toLowerCase().includes(pk));
   }
+  const rev = PL.dir==='desc' ? -1 : 1;
   if(PL.sort==='pickup'){
-    list = list.slice().sort((a,b)=> String(a.pickupNo||'').localeCompare(String(b.pickupNo||''),'zh-Hans-CN',{numeric:true}));
+    list = list.slice().sort((a,b)=> rev * String(a.pickupNo||'').localeCompare(String(b.pickupNo||''),'zh-Hans-CN',{numeric:true}));
   } else {
-    list = list.slice().sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+    list = list.slice().sort((a,b)=> rev * (b.arrivalTime||'').localeCompare(a.arrivalTime||''));
   }
   const chips = [['all',t('filterAll')],['pending',t('statusPending')],['picked',t('statusPicked')]]
     .map(x=>'<button class="chip '+(PL.status===x[0]?'on':'')+'" data-action="plist-filter" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
+  const arrow = PL.dir==='desc' ? '↓' : '↑';
   const sortChips = [['arrival',t('sortArrival')],['pickup',t('sortPickup')]]
-    .map(x=>'<button class="chip '+(PL.sort===x[0]?'on':'')+'" data-action="plist-sort" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
+    .map(x=>{ const cur = PL.sort===x[0]; return '<button class="chip '+(cur?'on':'')+'" data-action="plist-sort" data-id="'+x[0]+'">'+esc(x[1])+(cur?' '+arrow:'')+'</button>'; }).join('');
   const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
   if(PL.page > totalPages) PL.page = totalPages;
   if(PL.page < 1) PL.page = 1;
@@ -1805,7 +1807,7 @@ function runAction(action, id, el){
       break;
     case 'parcel-filter': PA.filter = id; PA.page = 1; render(); break;
     case 'plist-filter': PL.status = id; PL.page = 1; render(); break;
-    case 'plist-sort': PL.sort = id; PL.page = 1; render(); break;
+    case 'plist-sort': if(PL.sort===id){ PL.dir = (PL.dir==='asc'?'desc':'asc'); } else { PL.sort = id; PL.dir = (id==='pickup'?'asc':'desc'); } PL.page = 1; render(); break;
     case 'parcel-page': PA.page = parseInt(id,10)||1; render(); break;
     case 'plist-page': PL.page = parseInt(id,10)||1; render(); break;
     case 'parcel-search': PA.q = document.getElementById('pa-search').value; PA.page = 1; render(); break;
