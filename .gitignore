@@ -8,3 +8,9 @@ Desktop.ini
 
 # Node (test runner has no deps, keep this for safety)
 node_modules/
+
+# 线上数据文件（真实营业数据，留在服务器本地，不入库）
+data.json
+
+# 隧道工具（本机使用，不入库）
+cloudflared.exe
