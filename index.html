@@ -273,6 +273,12 @@ body.night .barcode{opacity:.9}
 .prow-name{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .prow-sub{font-size:13px;color:var(--ink-2);margin-top:2px}
 .prow-ops{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.sw{position:relative;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;user-select:none}
+.sw .sw-track{width:52px;height:26px;border-radius:13px;background:#D8E4DC;position:relative;transition:background .2s}
+.sw .sw-track::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s}
+.sw.on .sw-track{background:#177245}
+.sw.on .sw-track::after{left:29px}
+.sw .sw-lab{font-size:12px;color:var(--ink-2)}
 
 /* 快递列表：单号 / 尾号备注 / 时间 / 状态 / 取件编号 */
 .p2{display:flex;align-items:center;gap:10px;padding:12px 6px;border-top:1px solid var(--line)}
@@ -1294,7 +1300,7 @@ function adminParcels(){
           (off
             ? '<button class="btn btn-ghost btn-sm" data-action="parcel-undo" data-id="'+esc(p.id)+'">'+esc(t('undoPick'))+'</button>'
             : '<button class="btn btn-primary btn-sm" data-action="parcel-pick" data-id="'+esc(p.id)+'">'+ICONS.check+esc(t('markPicked'))+'</button>')+
-          (!off ? '<button class="btn btn-ghost btn-sm" data-action="parcel-domestic-toggle" data-id="'+esc(p.id)+'" title="'+esc(t('toggleDomestic'))+'">'+(p.status==='domestic'?'↩ '+esc(t('statusPending')):'🌏 '+esc(t('statusDomestic')))+'</button>' : '')+
+          (!off ? '<span class="sw'+(p.status==='domestic'?' on':'')+'" data-action="parcel-domestic-toggle" data-id="'+esc(p.id)+'" title="'+esc(t('toggleDomestic'))+'"><span class="sw-lab">'+esc(t('statusPending'))+'</span><span class="sw-track"></span><span class="sw-lab">'+esc(t('statusDomestic'))+'</span></span>' : '')+
           (!off ? '<button class="btn btn-ghost btn-sm" data-action="parcel-domestic-toggle" data-id="'+esc(p.id)+'" title="'+esc(t('toggleDomestic'))+'">'+(p.status==='domestic'?'↩ '+esc(t('statusPending')):'🌏 '+esc(t('statusDomestic')))+'</button>' : '')+
           (!off && p.requested ? '<button class="btn btn-ghost btn-sm" data-action="parcel-reject" data-id="'+esc(p.id)+'">'+esc(t('rejectRequest'))+'</button>' : '')+
           '<button class="icon-btn" data-action="parcel-edit-open" data-id="'+esc(p.id)+'" title="'+esc(t('editParcel'))+'">'+(ICONS.edit||'✎')+'</button>'+
