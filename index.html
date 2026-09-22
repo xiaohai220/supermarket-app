@@ -362,6 +362,7 @@ body.night .barcode{opacity:.9}
 :focus-visible{outline:3px solid var(--green-soft);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -459,6 +460,7 @@ const I18N = {
     filterAll:'全部', markPicked:'标记已取走', undoPick:'撤销标记', noParcels:'暂无快递记录',
     requireTracking:'请填写运单号', dupTracking:'该运单号已登记', parcelAdded:'已登记', parcelUpdated:'已更新',
     batchAdd:'批量快速添加', batchAddHint:'每行一个运单号（回车分隔，逗号也可）', batchNotePh:'如：9栋3单元 · 小李', batchAddBtn:'一次性登记全部', batchDone:'成功添加 {a} 个，跳过重复 {d} 个',
+    ocrPick:'从照片识别单号', ocrReading:'正在识别：', ocrDone:'识别到 {n} 个单号，已填入下方', ocrFail:'识别失败：',
     consignPending:'待审核', consignOn:'在售', consignSold:'已售出',
     consignApprove:'上架', consignMarkSold:'标记售出', consignListEmpty:'暂无寄售记录',
     consignFilterAll:'全部', consignPriceHint:'客户提交的期望价格，上架后客户可见',
@@ -791,6 +793,13 @@ function go(hash){ if(location.hash===hash){ render(); } else { location.hash = 
 
 /* ===== 页面渲染入口 ===== */
 function render(){
+  setTimeout(()=>{
+    const pick=document.getElementById('ocr-pick'); const fi=document.getElementById('ocr-file');
+    if(pick && fi && !pick.dataset.wired){ pick.dataset.wired='1';
+      pick.addEventListener('click',()=>fi.click());
+      fi.addEventListener('change',e=>{ ocrPickFiles(Array.from(e.target.files||[])); e.target.value=''; });
+    }
+  },0);
   const r = route();
   const app = document.getElementById('app');
   const prevRoute = (window.__SM_ROUTE||'');
@@ -1279,7 +1288,9 @@ function adminParcels(){
       '<h3 style="margin-bottom:6px">'+esc(t('batchAdd'))+'</h3>'+
       '<div class="field"><label>'+esc(t('batchAddHint'))+'</label><textarea id="pa-batch" rows="6" placeholder="YT259347025\nYT2550260285\nSF1234567890"></textarea></div>'+
       '<div class="field"><label>'+esc(t('parcelName'))+' / '+esc(t('parcelNote'))+'</label><input type="text" id="pa-batch-note" placeholder="'+esc(t('batchNotePh'))+'"></div>'+
-      '<div style="margin-top:10px"><button class="btn btn-primary" data-action="parcel-batch">'+ICONS.plus+esc(t('batchAddBtn'))+'</button></div>'+
+      '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" data-action="parcel-batch">'+ICONS.plus+esc(t('batchAddBtn'))+'</button><button class="btn btn-ghost" id="ocr-pick">'+'📷 '+esc(t('ocrPick'))+'</button></div>'+
+      '<input type="file" id="ocr-file" accept="image/*" multiple style="display:none">'+
+      '<div id="ocr-status" class="hint" style="margin-top:6px"></div>'+
     '</div>'+
     '<div class="card admin-panel">'+
       '<div class="panel-head"><h3>'+esc(t('parcelList'))+'</h3><span class="count num">'+esc(fmtCount(t('parcelCount'),{n:S.parcels.length,p:pendingCount()}))+'</span></div>'+
@@ -1314,6 +1325,26 @@ function addParcelFromForm(){
   else{ ['pa-no','pa-name','pa-note','pa-pickupno'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; }); }
   render();
   toast(t('parcelAdded'));
+}
+
+async function ocrPickFiles(files){
+  const ta=document.getElementById('pa-batch');
+  const st=document.getElementById('ocr-status');
+  const have=new Set(S.parcels.map(p=>p.trackingNo.toUpperCase()));
+  for(const file of files){
+    st.textContent=t('ocrReading')+file.name;
+    try{
+      const {data}=await Tesseract.recognize(file,'eng',{logger:()=>{}});
+      const txt=data.text||'';
+      // 提取运单号：连续的大写字母+数字，长度 8~22
+      const tokens=txt.toUpperCase().match(/[A-Z0-9]{8,22}/g)||[];
+      let added=0;
+      tokens.forEach(tok=>{ if(!have.has(tok)){ have.add(tok); added++; }});
+      const cur=ta.value.trim();
+      ta.value=(cur?cur+'\n':'')+tokens.join('\n');
+      st.textContent=t('ocrDone').replace('{n}',tokens.length);
+    }catch(e){ st.textContent=t('ocrFail')+e.message; }
+  }
 }
 function addParcelsBatch(){
   const ta = document.getElementById('pa-batch');
