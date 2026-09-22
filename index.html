@@ -1805,6 +1805,7 @@ function runAction(action, id, el){
       break;
     case 'parcel-filter': PA.filter = id; PA.page = 1; render(); break;
     case 'plist-filter': PL.status = id; PL.page = 1; render(); break;
+    case 'plist-sort': PL.sort = id; PL.page = 1; render(); break;
     case 'parcel-page': PA.page = parseInt(id,10)||1; render(); break;
     case 'plist-page': PL.page = parseInt(id,10)||1; render(); break;
     case 'parcel-search': PA.q = document.getElementById('pa-search').value; PA.page = 1; render(); break;
