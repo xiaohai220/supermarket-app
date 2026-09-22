@@ -1246,6 +1246,7 @@ function adminParcels(){
   const filtered = list.filter(p=>{
     if(PA.filter==='pending' && p.status!=='pending') return false; if(PA.filter==='domestic' && p.status!=='domestic') return false;
     if(PA.filter==='picked' && p.status!=='picked') return false;
+    if(PA.filter==='domestic' && p.status!=='domestic') return false;
     if(PA.q){
       const q=PA.q.toLowerCase();
       const hit = (p.trackingNo||'').toLowerCase().includes(q)
@@ -1333,6 +1334,7 @@ function adminParcelListCardHtml(){
   const filtered = list.filter(p=>{
     if(PA.filter==='pending' && p.status!=='pending') return false;
     if(PA.filter==='picked' && p.status!=='picked') return false;
+    if(PA.filter==='domestic' && p.status!=='domestic') return false;
     if(PA.q){
       const q=PA.q.toLowerCase();
       const hit = (p.trackingNo||'').toLowerCase().includes(q)
@@ -1401,6 +1403,7 @@ function adminParcelListRowsHtml(){
   const filtered = list.filter(p=>{
     if(PA.filter==='pending' && p.status!=='pending') return false;
     if(PA.filter==='picked' && p.status!=='picked') return false;
+    if(PA.filter==='domestic' && p.status!=='domestic') return false;
     if(PA.q){
       const q=PA.q.toLowerCase();
       const hit = (p.trackingNo||'').toLowerCase().includes(q)
