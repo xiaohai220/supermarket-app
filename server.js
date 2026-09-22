@@ -44,13 +44,18 @@ const handler = (req, res) => {
         try{
           const incoming = JSON.parse(body);
           const cur = readState();
-          // 并发合并：按 id 合并数组，避免"后写覆盖先写"导致整批数据丢失
           const idArrays = ['products','parcels','consign','consignHistory'];
+          cur._tombstones = cur._tombstones || {};
           for(const key of idArrays){
             if(Array.isArray(incoming[key])){
+              const curIds = new Set((cur[key]||[]).map(it=>String(it.id)));
+              const inIds  = new Set(incoming[key].map(it=>String(it&&it.id)));
+              const tlist = new Set(cur._tombstones[key]||[]);
+              curIds.forEach(id=>{ if(!inIds.has(id)) tlist.add(id); });
+              cur._tombstones[key] = Array.from(tlist);
               const map = new Map();
-              (cur[key]||[]).forEach(it => { if(it && it.id!=null) map.set(String(it.id), it); });
-              incoming[key].forEach(it => { if(it && it.id!=null) map.set(String(it.id), it); });
+              (cur[key]||[]).forEach(it => { if(it && it.id!=null && !tlist.has(String(it.id))) map.set(String(it.id), it); });
+              incoming[key].forEach(it => { if(it && it.id!=null && !tlist.has(String(it.id))) map.set(String(it.id), it); });
               cur[key] = Array.from(map.values());
             }
           }
