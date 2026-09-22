@@ -588,12 +588,12 @@ let _localDirtyUntil=0;
 let _remoteReady=false;
 function remoteSync(){
   if(!USE_REMOTE) return;
-  if(!_remoteReady) return; // 还没从服务器拉到最新数据前，不用本地旧数据覆盖服务器
-  _localDirtyUntil = Date.now()+2500; // 本地刚改过，2.5秒内不拉服务器覆盖
+  if(!_remoteReady) return;
+  _localDirtyUntil = Date.now()+5000; // 本地刚改过，5秒内不拉服务器覆盖
   clearTimeout(_remoteTimer);
   _remoteTimer=setTimeout(()=>{
-    try{ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{}); }catch(e){}
-  },300);
+    try{ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).then(()=>{ _localDirtyUntil=Date.now()+5000; }).catch(()=>{}); }catch(e){}
+  },200);
 }
 async function remoteInit(){
   if(!USE_REMOTE) return;
