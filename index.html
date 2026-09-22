@@ -1383,7 +1383,7 @@ function adminParcelListCardHtml(){
   return '<div class="card admin-panel">'+
       '<div class="panel-head"><h3>'+esc(t('parcelList'))+'</h3><span class="count num">'+esc(fmtCount(t('parcelCount'),{n:S.parcels.length,p:pendingCount()}))+'</span></div>'+
       '<div class="chips" style="margin-bottom:10px">'+filters+'</div>'+
-      '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-action="parcel-search" data-enter="parcel-search" placeholder="'+esc(t('parcelSearchPh'))+'" value="'+esc(PA.q)+'"></div>'+
+      '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-enter="parcel-search" placeholder="'+esc(t('parcelSearchPh'))+'" value="'+esc(PA.q)+'"></div>'+
       '<div id="pa-list-area">'+rows+pagerHtml(PA.page, totalPages, 'parcel-page')+'</div>'+
     '</div>';
 }
