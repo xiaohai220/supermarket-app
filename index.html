@@ -422,7 +422,7 @@ const I18N = {
     productsCount:'共 {n} 件商品',
     parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
     parcelName:'收件人昵称', parcelNamePh:'如：阿里妈妈',
-    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', plistPh:'搜昵称 / 单号 / 单号后四位', pickupPh:'按编号查（如⑦）', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
+    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', plistPh:'搜昵称 / 单号 / 单号后四位', pickupPh:'按编号查（如⑦）', sortArrival:'到店时间↓', sortPickup:'编号↑', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
     statusReview:'取件中', reviewTip:'已申请取件，等待店员确认', requestPickTip:'点击申请取件', requestBadge:'客户申请取件', requestSent:'已提交取件申请，等待店员确认', rejectRequest:'驳回申请', rejected:'已驳回申请', withdrawTip:'再次点击撤回取件申请', withdrawn:'已撤回取件申请', requestTime:'申请时间',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取件', statusDomestic:'国内', editParcel:'编辑快递', saveEdit:'保存', cancel:'取消',
@@ -494,7 +494,7 @@ const I18N = {
     productsCount:'{n} items',
     parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
     parcelName:'Recipient nickname', parcelNamePh:'e.g. Auntie Li',
-    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', plistPh:'Search name / No. / last 4', pickupPh:'By pickup No.', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
+    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', plistPh:'Search name / No. / last 4', pickupPh:'By pickup No.', sortArrival:'Arrival↓', sortPickup:'Pickup↑', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
     statusReview:'Picking up', reviewTip:'Pickup requested, waiting for staff', requestPickTip:'Tap to request pickup', requestBadge:'Customer requested pickup', requestSent:'Pickup request sent, waiting for staff', rejectRequest:'Reject request', rejected:'Request rejected', withdrawTip:'Tap again to withdraw request', withdrawn:'Request withdrawn', requestTime:'Requested at',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up', statusDomestic:'Domestic', editParcel:'Edit parcel', saveEdit:'Save', cancel:'Cancel',
@@ -778,7 +778,7 @@ function consignCardHtml(c, cur){
 /* ===== 视图状态 ===== */
 const PS = { q:'', cat:'all', sort:'default', stock:'all' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
-const PL = { q:'', pickup:'', status:'all', page:1, date:'' }; // 客户快递列表筛选
+const PL = { q:'', pickup:'', status:'all', page:1, date:'', sort:'arrival' }; // 客户快递列表筛选
 const PA = { filter:'all', q:'', page:1 };                 // 快递管理
 const PAGE_SIZE = 10;
 let ADMIN_OK = false;
@@ -981,7 +981,7 @@ function viewParcels(){
     publicParcelList();
 }
 function publicParcelList(){
-  let list = S.parcels.slice().sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  let list = S.parcels.slice();
   const total = list.length;
   if(PL.status && PL.status!=='all') list = list.filter(p=>p.status===PL.status);
   if(PL.date) list = list.filter(p=>{
@@ -1002,8 +1002,15 @@ function publicParcelList(){
     const pk = PL.pickup.trim().toLowerCase();
     list = list.filter(p=> (p.pickupNo||'').toLowerCase().includes(pk));
   }
+  if(PL.sort==='pickup'){
+    list = list.slice().sort((a,b)=> String(a.pickupNo||'').localeCompare(String(b.pickupNo||''),'zh-Hans-CN',{numeric:true}));
+  } else {
+    list = list.slice().sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  }
   const chips = [['all',t('filterAll')],['pending',t('statusPending')],['picked',t('statusPicked')]]
     .map(x=>'<button class="chip '+(PL.status===x[0]?'on':'')+'" data-action="plist-filter" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
+  const sortChips = [['arrival',t('sortArrival')],['pickup',t('sortPickup')]]
+    .map(x=>'<button class="chip '+(PL.sort===x[0]?'on':'')+'" data-action="plist-sort" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
   const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
   if(PL.page > totalPages) PL.page = totalPages;
   if(PL.page < 1) PL.page = 1;
@@ -1046,7 +1053,7 @@ function publicParcelList(){
       '<div class="search-wrap" style="flex:1;min-width:160px">'+ICONS.search+'<input id="plist-search" data-action="plist-search" placeholder="'+esc(t('plistPh'))+'" value="'+esc(PL.q)+'"></div>'+
       '<div class="search-wrap" style="flex:0 0 130px">'+ICONS.tag+'<input id="plist-pickup" data-action="plist-pickup-search" placeholder="'+esc(t('pickupPh'))+'" value="'+esc(PL.pickup)+'"></div>'+
     '</div>'+
-    '<div class="chips" style="margin-bottom:10px">'+chips+'</div>'+
+    '<div class="chips" style="margin-bottom:10px;gap:6px;flex-wrap:wrap">'+chips+'<span style="opacity:.4">|</span>'+sortChips+'</div>'+
     '<div class="date-row" style="margin-bottom:10px"><label class="date-label">'+esc(t('arrivalDate'))+'</label><input type="date" id="plist-date" value="'+esc(PL.date)+'"></div>'+
     '<div class="p2 p2-head">'+
       '<div class="p2-main"><div class="p2-h">'+esc(t('trackingNo'))+'</div></div>'+
