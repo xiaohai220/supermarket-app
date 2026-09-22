@@ -1387,7 +1387,7 @@ function adminParcelListCardHtml(){
       '</div>';
     }).join('');
   }
-  const filters = [['all',t('filterAll')],['pending',t('statusPending')],['picked',t('statusPicked')]]
+  const filters = [['all',t('filterAll')],['pending',t('statusPending')],['domestic',t('statusDomestic')],['picked',t('statusPicked')]]
     .map(x=>'<button class="chip '+(PA.filter===x[0]?'on':'')+'" data-action="parcel-filter" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
   return '<div class="card admin-panel">'+
       '<div class="panel-head"><h3>'+esc(t('parcelList'))+'</h3><span class="count num">'+esc(fmtCount(t('parcelCount'),{n:S.parcels.length,p:pendingCount()}))+'</span></div>'+
