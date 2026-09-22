@@ -592,7 +592,7 @@ function remoteSync(){
   _localDirtyUntil = Date.now()+5000; // 本地刚改过，5秒内不拉服务器覆盖
   clearTimeout(_remoteTimer);
   _remoteTimer=setTimeout(()=>{
-    try{ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},S,{_del:S._del||[]})).then(()=>{ S._del=[]; _localDirtyUntil=Date.now()+5000; }).catch(()=>{}); }catch(e){}
+    try{ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},S,{_del:S._del||[]}))}).then(()=>{ S._del=[]; _localDirtyUntil=Date.now()+5000; }).catch(()=>{}); }catch(e){}
   },200);
 }
 async function remoteInit(){
