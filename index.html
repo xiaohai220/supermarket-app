@@ -1177,6 +1177,7 @@ function adminProducts(){
           '<div class="prow-sub num">'+esc(catName(p.categoryId))+' · '+esc(cur)+' '+esc(fmtMoney(p.price))+(p.unit?' / '+esc(p.unit):'')+'</div>'+
         '</div>'+
         '<div class="prow-ops">'+
+          '<span class="sw'+(p.inStock?' on':'')+'" data-action="product-stock-toggle" data-id="'+esc(p.id)+'" title="'+esc(t('toggleDomestic'))+'"><span class="sw-lab">'+esc(t('outOfStock'))+'</span><span class="sw-track"></span><span class="sw-lab">'+esc(t('inStock'))+'</span></span>'+
           '<button class="icon-btn" data-action="product-edit" data-id="'+esc(p.id)+'" title="'+esc(t('edit'))+'">'+ICONS.edit+'</button>'+
           '<button class="icon-btn" data-action="product-del" data-id="'+esc(p.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
         '</div>'+
@@ -1963,6 +1964,7 @@ function runAction(action, id, el){
         saveParcels(); render(); toast(t('deleted'));
       });
       break;
+    case 'product-stock-toggle': { const p=S.products.find(x=>x.id===id); if(p){ p.inStock=!p.inStock; saveProducts(); render(); } break; }
     case 'parcel-domestic-toggle': { const p=S.parcels.find(x=>x.id===id); if(p && p.status!=='picked'){ p.status = (p.status==='domestic')?'pending':'domestic'; saveParcels(); } const area=document.getElementById('pa-list-area'); if(area) area.innerHTML=adminParcelListRowsHtml(); else render(); break; }
     case 'parcel-filter': PA.filter = id; PA.page = 1; render(); break;
     case 'plist-filter': PL.status = id; PL.page = 1; render(); break;
