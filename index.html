@@ -362,8 +362,6 @@ body.night .barcode{opacity:.9}
 :focus-visible{outline:3px solid var(--green-soft);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -586,6 +584,7 @@ const USE_REMOTE = (typeof location!=='undefined' && location.protocol && locati
 let _remoteTimer=null;
 let _localDirtyUntil=0;
 let _remoteReady=false;
+let _lastRemoteSig='';
 function remoteSync(){
   if(!USE_REMOTE) return;
   if(!_remoteReady) return;
@@ -602,6 +601,11 @@ async function remoteInit(){
     const r=await fetch('/api/state',{cache:'no-store'});
     if(!r.ok) return;
     const d=await r.json()||{};
+    // 数据指纹：与上次一致说明无人改动，跳过赋值与整页重建，避免每秒闪动
+    const sig=JSON.stringify([d.products,d.parcels,d.consign,d.settings]);
+    const changed = sig!==_lastRemoteSig;
+    _lastRemoteSig=sig;
+    if(!changed) return;
     if(d.settings && typeof d.settings==='object') S.settings=Object.assign(defaultSettings(),d.settings);
     if(Array.isArray(d.products)) S.products=d.products;
     if(Array.isArray(d.parcels)) S.parcels=d.parcels;
@@ -622,7 +626,6 @@ function defaultSettings(){
     lang:'zh',
     theme:'night',
     adminPass:'123456',
-    baseCurrency:'PKR',
     storeNameZh:'小向超市',
     storeNameEn:'Xiaoxiang Supermarket',
     categories:[
@@ -904,7 +907,7 @@ function prodFiltered(){
   return list;
 }
 function prodGridHtml(list){
-  const cur = S.settings.baseCurrency || 'PKR';
+  const cur = '¥';
   if(!list.length){
     return '<div class="empty"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('emptyProductsTitle'))+'</h3><p>'+esc(t('emptyProductsDesc'))+'</p></div>';
   }
@@ -981,11 +984,19 @@ function viewParcels(){
     publicParcelList();
 }
 function consignResultsHtml(){
-  const cur = S.settings && S.settings.currency || '¥';
+  const cur = '¥';
   if(CS.results && CS.results.length){
     return '<div class="card admin-panel" style="margin-top:16px"><h3 style="margin-bottom:10px">'+esc(t('consignQueryTitle'))+'</h3>'+
-      CS.results.map(c=>'<div class="prow"><div class="prow-info"><div class="prow-name">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</div>'+
-      '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+(c.desc?' · '+esc(c.desc):'')+'</div></div></div>').join('')+'</div>';
+      CS.results.map(c=>{
+        let buyerLine = '';
+        if(Array.isArray(c.buyers) && c.buyers.length){
+          buyerLine = CS.showBuyers
+            ? '<div class="prow-sub" style="color:#ff6b35;margin-top:4px">'+ICONS.info+' '+esc(t('consignBuyers'))+'：'+c.buyers.map(b=>esc(b.phone)+' <span class="num" style="opacity:.7">('+esc(fmtDT(b.time))+')</span>').join('， ')+'</div>'
+            : '<div style="margin-top:6px"><button class="btn btn-ghost btn-sm" data-action="consign-view-buyers-open">'+ICONS.lock+esc(t('consignViewBuyers'))+'</button></div>';
+        }
+        return '<div class="prow"><div class="prow-info"><div class="prow-name">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</div>'+
+        '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+(c.desc?' · '+esc(c.desc):'')+'</div>'+buyerLine+'</div></div>';
+      }).join('')+'</div>';
   }
   return '<div class="card p-result"><div class="empty" style="padding:20px 10px"><div class="e-ico">'+ICONS.search+'</div><h3>'+esc(t('consignNoResult'))+'</h3></div></div>';
 }
@@ -1080,7 +1091,7 @@ function publicParcelList(){
 
 /* ===== 货币汇率 ===== */
 function viewConsign(){
-  const cur = S.settings.baseCurrency || 'PKR';
+  const cur = '¥';
   const pub = route().params.get('new') === '1';
   // —— 发布寄售表单页 ——
   if(pub){
@@ -1096,6 +1107,7 @@ function viewConsign(){
           '<div class="field"><label>'+esc(t('consignContactLabel'))+'</label><input type="text" id="cs-contact" data-enter="consign-submit"></div>'+
         '</div>'+
         '<div class="field"><label>'+esc(t('consignorLabel'))+'</label><input type="text" id="cs-consignor"></div>'+
+        '<div class="field"><label>'+esc(t('consignPwdLabel'))+' *</label><input type="password" id="cs-pwd" data-enter="consign-submit" placeholder="'+esc(t('consignPwdPh'))+'"></div>'+
         '<div class="field"><label>'+esc(t('consignPhotoLabel'))+'</label>'+prev+
           '<div style="display:flex;gap:8px">'+
             '<button class="btn btn-ghost btn-sm" data-action="consign-img-pick">'+ICONS.upload+esc(t('chooseImage'))+'</button>'+
@@ -1113,20 +1125,7 @@ function viewConsign(){
   }else{
     grid = '<div class="xy-grid">'+onSale.map(c=>consignCardHtml(c,cur)).join('')+'</div>';
   }
-  let queryHtml = '';
-  if(CS.queried){
-    if(CS.results && CS.results.length){
-      queryHtml = '<div class="card admin-panel" style="margin-top:16px"><h3 style="margin-bottom:10px">'+esc(t('consignQueryTitle'))+'</h3>'+
-        CS.results.map(c=>'<div class="prow">'+
-          '<div class="prow-info">'+
-            '<div class="prow-name">'+esc(c.title)+' '+consignStatusBadge(c.status)+'</div>'+
-            '<div class="prow-sub num">'+esc(cur)+' '+esc(fmtMoney(c.price))+(c.desc?' · '+esc(c.desc):'')+'</div>'+
-          '</div></div>').join('')+
-        '</div>';
-    }else{
-      queryHtml = '<div class="card p-result"><div class="empty" style="padding:20px 10px"><div class="e-ico">'+ICONS.search+'</div><h3>'+esc(t('consignNoResult'))+'</h3></div></div>';
-    }
-  }
+  let queryHtml = CS.queried ? consignResultsHtml() : '';
   return pageHead(t('consignTitle'))+
     '<h2 style="margin:4px 2px 12px">'+esc(t('onSaleTitle'))+'</h2>'+
     grid+
@@ -1157,7 +1156,7 @@ function viewAdmin(tab){
 
 /* —— 商品管理 —— */
 function adminProducts(){
-  const cur = S.settings.baseCurrency || 'PKR';
+  const cur = '¥';
   let rows;
   if(!S.products.length){
     rows = '<div class="empty" style="padding:34px 12px"><div class="e-ico">'+ICONS.tag+'</div><h3>'+esc(t('emptyProductsTitle'))+'</h3><p>'+esc(t('emptyProductsDesc'))+'</p></div>';
@@ -1484,17 +1483,34 @@ function addParcelFromForm(){
 }
 
 
+/* 按需加载第三方库：OCR 与 Excel 只在管理员真正使用时才下载，顾客端首页不再背负几 MB 的 CDN 依赖 */
+const _libPromises = {};
+function loadScriptOnce(key, src){
+  if(_libPromises[key]) return _libPromises[key];
+  _libPromises[key] = new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = ()=>resolve();
+    s.onerror = ()=>{ _libPromises[key] = null; reject(new Error('script load failed')); };
+    document.head.appendChild(s);
+  });
+  return _libPromises[key];
+}
+const loadTesseract = ()=>loadScriptOnce('tesseract','https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+const loadXlsx = ()=>loadScriptOnce('xlsx','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+
 function parseCell(v){ return (v==null?'':String(v)).trim(); }
 async function importXlsx(file){
   try{
+    await loadXlsx();
     const buf=await file.arrayBuffer();
     const wb=XLSX.read(buf,{type:'array'});
     const ws=wb.Sheets[wb.SheetNames[0]];
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    let hi=-1, cNo=-1,cPick=-1,cNote=-1;
+    let hi=-1, cNo=-1,cPick=-1,cNote=-1,cTail=-1;
     rows.forEach((r,i)=>{ if(hi>=0)return;
       const cells=r.map(parseCell);
-      cells.forEach((c,j)=>{ if(/快递单号|运单号|单号/.test(c))cNo=j; if(/编号|取件号/.test(c))cPick=j; if(/备注|说明/.test(c))cNote=j; });
+      cells.forEach((c,j)=>{ if(/快递单号|运单号|单号/.test(c))cNo=j; if(/编号|取件号/.test(c))cPick=j; if(/备注|说明/.test(c))cNote=j; if(/尾号|手机后四位|手机后4位/.test(c))cTail=j; });
       if(cNo>=0) hi=i;
     });
     if(hi<0){ cNo=0; cPick=1; cNote=2; }
@@ -1505,7 +1521,7 @@ async function importXlsx(file){
       const no=parseCell(r[cNo]).replace(/\s+/g,'').toUpperCase();
       if(no.length<6) continue;
       if(S.parcels.some(p=>p.trackingNo.toUpperCase()===no)){dup++;continue;}
-      S.parcels.push({id:uid(), trackingNo:no, name:'', note:cNote>=0?parseCell(r[cNote]):'', pickupNo:cPick>=0?parseCell(r[cPick]):'', arrivalTime:new Date().toISOString(), status:'pending', pickTime:null});
+      S.parcels.push({id:uid(), trackingNo:no, name:'', tail:cTail>=0?parseCell(r[cTail]):'', note:cNote>=0?parseCell(r[cNote]):'', pickupNo:cPick>=0?parseCell(r[cPick]):'', arrivalTime:new Date().toISOString(), status:'pending', pickTime:null});
       added++;
     }
     if(!saveParcels()){ alert(t('storageError')); return; }
@@ -1517,6 +1533,8 @@ async function ocrPickFiles(files){
   const ta=document.getElementById('pa-batch');
   const st=document.getElementById('ocr-status');
   const have=new Set(S.parcels.map(p=>p.trackingNo.toUpperCase()));
+  if(st) st.textContent=(lang==='zh'?'正在加载识别组件…':'Loading OCR…');
+  try{ await loadTesseract(); }catch(e){ if(st) st.textContent=t('ocrFail')+e.message; return; }
   for(const file of files){
     st.textContent=t('ocrReading')+file.name;
     try{
@@ -1555,7 +1573,7 @@ function addParcelsBatch(){
 /* —— 寄售管理 —— */
 const CSM = { filter:'all' };  // 管理端筛选
 function adminConsign(){
-  const cur = S.settings.baseCurrency || 'PKR';
+  const cur = '¥';
   const list = S.consign.slice().filter(c=>{
     if(CSM.filter==='pending' && c.status!=='pending') return false;
     if(CSM.filter==='on' && c.status!=='on') return false;
@@ -1751,7 +1769,7 @@ function runAction(action, id, el){
     case 'consign-detail': {
       const c = S.consign.find(x=>x.id===id);
       if(!c) break;
-      const cur = S.settings.baseCurrency || 'PKR';
+      const cur = '¥';
       const img = c.photo ? '<img src="'+esc(c.photo)+'" style="width:100%;max-height:300px;object-fit:cover;border-radius:12px;display:block" alt="">'
         : '<div style="aspect-ratio:1/1;background:#f1f3f5;border-radius:12px;display:grid;place-items:center;color:#adb5bd">'+ICONS.tag+'</div>';
       openModal(
@@ -1803,10 +1821,12 @@ function runAction(action, id, el){
       const price = parseFloat((document.getElementById('cs-price')||{}).value);
       const contact = ((document.getElementById('cs-contact')||{}).value||'').trim();
       const consignor = ((document.getElementById('cs-consignor')||{}).value||'').trim();
+      const pwd = ((document.getElementById('cs-pwd')||{}).value||'').trim();
       if(!title.trim()){ toast(t('consignRequireTitle')); break; }
       if(isNaN(price) || price<0){ toast(t('consignRequirePrice')); break; }
       if(!contact){ toast(t('consignRequireContact')); break; }
-      S.consign.push({ id:uid(), title:title.trim(), desc:desc.trim(), price:price, contact:contact, consignor:consignor, photo:FORM_CONSIGN_IMG, status:'pending', createTime:new Date().toISOString(), soldTime:null });
+      if(!pwd){ toast(t('consignPwdRequired')); break; }
+      S.consign.push({ id:uid(), title:title.trim(), desc:desc.trim(), price:price, contact:contact, consignor:consignor, pwd:pwd, photo:FORM_CONSIGN_IMG, status:'pending', createTime:new Date().toISOString(), soldTime:null });
       FORM_CONSIGN_IMG = '';
       if(!saveConsign()){ toast(t('storageError')); break; }
       toast(t('consignSubmitted'));
@@ -2089,14 +2109,16 @@ load();
 render();
 applyTheme();
 remoteInit();
-// 共享模式下每 8 秒拉取一次服务器最新数据（不覆盖正在输入的内容）
+// 共享模式下每 1 秒拉取一次服务器最新数据（不覆盖正在输入的内容；页面在后台时暂停，回前台立即补一次）
 if(USE_REMOTE){
   setInterval(()=>{
+    if(document.hidden) return;
     const focus=document.activeElement;
     const typing = focus && (focus.tagName==='INPUT' || focus.tagName==='SELECT' || focus.tagName==='TEXTAREA');
     if(typing) return;
     remoteInit();
   },1000);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) remoteInit(); });
 }
 
 /* ===== PWA：部署到 https 后注册 service worker，支持添加到主屏幕 ===== */

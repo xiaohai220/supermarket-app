@@ -1,7 +1,7 @@
 {
   "name": "超市客户服务",
   "short_name": "超市服务",
-  "description": "超市客户服务终端：商品展示、快递查询、货币汇率",
+  "description": "超市客户服务终端：商品展示、快递查询、二手寄售",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

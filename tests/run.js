@@ -116,7 +116,7 @@ async function main() {
     const api = boot();
     check('0.1 单文件脚本可加载并渲染首页', api.appHtml().length > 0);
     check('0.2 默认口令为 123456', api.S.settings.adminPass === '123456');
-    check('0.3 默认基准货币为 PKR', api.S.settings.baseCurrency === 'PKR');
+    check('0.3 默认设置不再含已删汇率模块的基准货币字段', !('baseCurrency' in api.S.settings));
     check('0.4 默认有 5 个分类', Array.isArray(api.S.settings.categories) && api.S.settings.categories.length === 5);
     check('0.5 localStorage 已写入 sm_settings', !!api.store['sm_settings']);
     check('0.6 首页渲染了超市名称', api.appHtml().includes('小向超市'));
@@ -160,7 +160,7 @@ async function main() {
     check('1.3 新增商品写入 localStorage sm_products', JSON.parse(api.store['sm_products']).length === 1);
     check('1.4 商品字段正确（名称/分类/价格）', api.S.products[0].nameZh === '苹果' && api.S.products[0].categoryId === 'c1' && near(api.S.products[0].price, 35, 0.001));
     api.go('#/products'); api.render();
-    check('1.5 商品页显示商品名与货币代码', api.appHtml().includes('苹果') && api.appHtml().includes('PKR'));
+    check('1.5 商品页显示商品名与货币符号', api.appHtml().includes('苹果') && api.appHtml().includes('¥'));
 
     api.openProductForm(null);
     api.setVal('pi-zh', '香蕉'); api.setVal('pi-price', '18'); api.setVal('pi-cat', 'c1');
@@ -254,9 +254,17 @@ async function main() {
     api.setVal('cs-price', '4500');
     api.setVal('cs-contact', '0300-1234567');
     api.setVal('cs-consignor', '阿里');
+    api.setVal('cs-pwd', 'abc123');
     api.runAction('consign-submit', '', null);
     check('3.2 提交后生成 pending 记录', api.S.consign.length === 1 && api.S.consign[0].status === 'pending');
-    check('3.3 寄售字段完整', api.S.consign[0].title === '九成新自行车' && near(api.S.consign[0].price, 4500, 0.001) && api.S.consign[0].contact === '0300-1234567');
+    check('3.3 寄售字段完整', api.S.consign[0].title === '九成新自行车' && near(api.S.consign[0].price, 4500, 0.001) && api.S.consign[0].contact === '0300-1234567' && api.S.consign[0].pwd === 'abc123');
+
+    // 缺查看密码应拒绝
+    const beforePwd = api.S.consign.length;
+    api.go('#/consign?new=1'); api.render();
+    api.setVal('cs-title', '缺密码'); api.setVal('cs-price', '10'); api.setVal('cs-contact', '0300-1234567'); api.setVal('cs-pwd', '');
+    api.runAction('consign-submit', '', null);
+    check('3.3b 缺查看密码被拒绝', api.S.consign.length === beforePwd);
 
     // 缺联系电话应拒绝
     const before = api.S.consign.length;
@@ -282,6 +290,18 @@ async function main() {
     api.setVal('cs-query', '1234567');
     api.runAction('consign-query', '', null);
     check('3.8 按联系电话查询到寄售记录', api.CS.results && api.CS.results.length === 1);
+
+    // 买家留电 + 卖家凭自设密码查看买家手机号
+    api.runAction('consign-buy', api.S.consign[0].id, null);
+    api.setVal('cs-buy-phone', '13800000000');
+    api.runAction('consign-buy-submit', api.S.consign[0].id, null);
+    api.runAction('consign-query', '', null);
+    api.setVal('pwd-input', 'wrong');
+    api.runAction('consign-view-buyers', '', null);
+    check('3.8b 密码错误时看不到买家手机号', !api.appHtml().includes('13800000000'));
+    api.setVal('pwd-input', 'abc123');
+    api.runAction('consign-view-buyers', '', null);
+    check('3.8c 凭自设密码可见买家手机号', api.appHtml().includes('13800000000'));
 
     // 管理员标记售出
     api.go('#/admin?tab=consign'); api.render();
