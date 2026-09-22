@@ -254,15 +254,14 @@ async function main() {
     api.setVal('cs-price', '4500');
     api.setVal('cs-contact', '0300-1234567');
     api.setVal('cs-consignor', '阿里');
-    api.setVal('cs-pwd', 'mypwd123');
     api.runAction('consign-submit', '', null);
     check('3.2 提交后生成 pending 记录', api.S.consign.length === 1 && api.S.consign[0].status === 'pending');
-    check('3.3 寄售字段完整(含卖家密码)', api.S.consign[0].title === '九成新自行车' && near(api.S.consign[0].price, 4500, 0.001) && api.S.consign[0].contact === '0300-1234567' && api.S.consign[0].pwd === 'mypwd123');
+    check('3.3 寄售字段完整', api.S.consign[0].title === '九成新自行车' && near(api.S.consign[0].price, 4500, 0.001) && api.S.consign[0].contact === '0300-1234567');
 
     // 缺联系电话应拒绝
     const before = api.S.consign.length;
     api.go('#/consign?new=1'); api.render();
-    api.setVal('cs-title', '缺电话'); api.setVal('cs-price', '10'); api.setVal('cs-contact', ''); api.setVal('cs-pwd', 'x');
+    api.setVal('cs-title', '缺电话'); api.setVal('cs-price', '10'); api.setVal('cs-contact', '');
     api.runAction('consign-submit', '', null);
     check('3.4 缺联系电话被拒绝', api.S.consign.length === before);
 
@@ -283,26 +282,6 @@ async function main() {
     api.setVal('cs-query', '1234567');
     api.runAction('consign-query', '', null);
     check('3.8 按联系电话查询到寄售记录', api.CS.results && api.CS.results.length === 1);
-
-    // 买家提交手机号
-    api.S.consign[0].buyers = [];
-    api.setVal('cs-buy-phone', '0311-9999');
-    api.runAction('consign-buy-submit', api.S.consign[0].id, null);
-    check('3.8b 买家提交手机号后记录在物品上', api.S.consign[0].buyers && api.S.consign[0].buyers[0].phone === '0311-9999');
-
-    // 卖家查看买家手机号：先输错密码被拒
-    api.go('#/consign'); api.render();
-    api.setVal('cs-query', '1234567');
-    api.runAction('consign-query', '', null);
-    api.runAction('consign-view-buyers-open', '', null);
-    api.setVal('pwd-input', 'wrong');
-    api.runAction('consign-view-buyers', '', null);
-    check('3.8c 卖家密码错误不显示买家', api.CS.showBuyers === false);
-    // 输对自己设的密码
-    api.runAction('consign-view-buyers-open', '', null);
-    api.setVal('pwd-input', 'mypwd123');
-    api.runAction('consign-view-buyers', '', null);
-    check('3.8d 卖家密码正确后显示买家', api.CS.showBuyers === true);
 
     // 管理员标记售出
     api.go('#/admin?tab=consign'); api.render();

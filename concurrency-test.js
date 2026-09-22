@@ -22,8 +22,8 @@ async function run(){
   const baseProductCount = (baseline.products||[]).length;
   console.log('基线商品数:', baseProductCount);
 
-  const USERS = 5;          // 5 名客人
-  const OPS_PER_USER = 6;   // 每人 6 次操作
+  const USERS = 15;         // 15 名客人
+  const OPS_PER_USER = 10;  // 每人 10 次操作
   const errors = [];
   const results = [];
 
@@ -63,8 +63,8 @@ async function run(){
   console.log('丢失(被覆盖)条数:', lost);
 
   // 读压力测试：20 次并发 GET，全部应成功
-  console.log('--- 读压力：20 并发 GET ---');
-  const reads = await Promise.all(Array.from({length:20}, async(_,i)=>{
+  console.log('--- 读压力：100 并发 GET ---');
+  const reads = await Promise.all(Array.from({length:100}, async(_,i)=>{
     try{ const s=await getState(); return s.products.length; }catch(e){ return -1; }
   }));
   const readFail = reads.filter(x=>x<0).length;

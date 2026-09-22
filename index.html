@@ -579,7 +579,7 @@ const LS = {
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 };
 const KEYS = { settings:'sm_settings', products:'sm_products', parcels:'sm_parcels', consign:'sm_consign' };
-const S = { settings:null, products:[], parcels:[], consign:[] };
+const S = { settings:null, products:[], parcels:[], consign:[], _del:[] };
 
 // 经由 http(s) 访问时，数据与所有访问者共享（存于服务器 data.json）；file:// 打开时仍用本机 localStorage
 const USE_REMOTE = (typeof location!=='undefined' && location.protocol && location.protocol.indexOf('http')===0);
@@ -592,7 +592,7 @@ function remoteSync(){
   _localDirtyUntil = Date.now()+5000; // 本地刚改过，5秒内不拉服务器覆盖
   clearTimeout(_remoteTimer);
   _remoteTimer=setTimeout(()=>{
-    try{ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).then(()=>{ _localDirtyUntil=Date.now()+5000; }).catch(()=>{}); }catch(e){}
+    try{ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},S,{_del:S._del||[]})).then(()=>{ S._del=[]; _localDirtyUntil=Date.now()+5000; }).catch(()=>{}); }catch(e){}
   },200);
 }
 async function remoteInit(){
@@ -1699,7 +1699,7 @@ function runAction(action, id, el){
     }
     case 'consign-del':
       confirmDlg(id, ()=>{
-        S.consign = S.consign.filter(c=>c.id!==id);
+        S._del=(S._del||[]).concat(id); S.consign = S.consign.filter(c=>c.id!==id);
         saveConsign(); render(); toast(t('deleted'));
       });
       break;
@@ -1708,7 +1708,7 @@ function runAction(action, id, el){
     case 'product-edit': openProductForm(id); break;
     case 'product-del':
       confirmDlg(id, ()=>{
-        S.products = S.products.filter(p=>p.id!==id);
+        S._del=(S._del||[]).concat(id); S.products = S.products.filter(p=>p.id!==id);
         saveProducts(); render(); toast(t('deleted'));
       });
       break;
@@ -1740,7 +1740,7 @@ function runAction(action, id, el){
     }
     case 'parcel-del':
       confirmDlg(id, ()=>{
-        S.parcels = S.parcels.filter(p=>p.id!==id);
+        S._del=(S._del||[]).concat(id); S.parcels = S.parcels.filter(p=>p.id!==id);
         saveParcels(); render(); toast(t('deleted'));
       });
       break;

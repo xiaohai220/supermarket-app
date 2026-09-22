@@ -48,10 +48,8 @@ const handler = (req, res) => {
           cur._tombstones = cur._tombstones || {};
           for(const key of idArrays){
             if(Array.isArray(incoming[key])){
-              const curIds = new Set((cur[key]||[]).map(it=>String(it.id)));
-              const inIds  = new Set(incoming[key].map(it=>String(it&&it.id)));
               const tlist = new Set(cur._tombstones[key]||[]);
-              curIds.forEach(id=>{ if(!inIds.has(id)) tlist.add(id); });
+              (incoming._del||[]).forEach(id=>tlist.add(String(id)));
               cur._tombstones[key] = Array.from(tlist);
               const map = new Map();
               (cur[key]||[]).forEach(it => { if(it && it.id!=null && !tlist.has(String(it.id))) map.set(String(it.id), it); });
