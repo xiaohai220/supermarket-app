@@ -458,6 +458,7 @@ const I18N = {
     parcelList:'快递列表', parcelCount:'共 {n} 件 · 待取 {p} 件', prevPage:'上一页', nextPage:'下一页',
     filterAll:'全部', markPicked:'标记已取走', undoPick:'撤销标记', noParcels:'暂无快递记录',
     requireTracking:'请填写运单号', dupTracking:'该运单号已登记', parcelAdded:'已登记', parcelUpdated:'已更新',
+    batchAdd:'批量快速添加', batchAddHint:'每行一个运单号（回车分隔，逗号也可）', batchNotePh:'如：9栋3单元 · 小李', batchAddBtn:'一次性登记全部', batchDone:'成功添加 {a} 个，跳过重复 {d} 个',
     consignPending:'待审核', consignOn:'在售', consignSold:'已售出',
     consignApprove:'上架', consignMarkSold:'标记售出', consignListEmpty:'暂无寄售记录',
     consignFilterAll:'全部', consignPriceHint:'客户提交的期望价格，上架后客户可见',
@@ -1274,6 +1275,12 @@ function adminParcels(){
       '<label class="check-row"><input type="checkbox" id="pa-quick">'+esc(t('quickAdd'))+'</label>'+
       '<div style="margin-top:10px"><button class="btn btn-primary" data-action="parcel-add">'+ICONS.plus+esc(t('register'))+'</button></div>'+
     '</div>'+
+    '<div class="card card-pad">'+
+      '<h3 style="margin-bottom:6px">'+esc(t('batchAdd'))+'</h3>'+
+      '<div class="field"><label>'+esc(t('batchAddHint'))+'</label><textarea id="pa-batch" rows="6" placeholder="YT259347025\nYT2550260285\nSF1234567890"></textarea></div>'+
+      '<div class="field"><label>'+esc(t('parcelName'))+' / '+esc(t('parcelNote'))+'</label><input type="text" id="pa-batch-note" placeholder="'+esc(t('batchNotePh'))+'"></div>'+
+      '<div style="margin-top:10px"><button class="btn btn-primary" data-action="parcel-batch">'+ICONS.plus+esc(t('batchAddBtn'))+'</button></div>'+
+    '</div>'+
     '<div class="card admin-panel">'+
       '<div class="panel-head"><h3>'+esc(t('parcelList'))+'</h3><span class="count num">'+esc(fmtCount(t('parcelCount'),{n:S.parcels.length,p:pendingCount()}))+'</span></div>'+
       '<div class="chips" style="margin-bottom:10px">'+filters+'</div>'+
@@ -1307,6 +1314,22 @@ function addParcelFromForm(){
   else{ ['pa-no','pa-name','pa-note','pa-pickupno'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; }); }
   render();
   toast(t('parcelAdded'));
+}
+function addParcelsBatch(){
+  const ta = document.getElementById('pa-batch');
+  const noteShared = (document.getElementById('pa-batch-note')||{}).value.trim();
+  const lines = (ta.value||'').split(/[\n,，;；]+/).map(x=>x.trim().replace(/\s+/g,'').toUpperCase()).filter(Boolean);
+  if(!lines.length){ toast(t('requireTracking')); return; }
+  const now = new Date().toISOString();
+  let added=0, dup=0;
+  lines.forEach(no=>{
+    if(S.parcels.some(p=>p.trackingNo.toUpperCase()===no)){ dup++; return; }
+    S.parcels.push({id:uid(), trackingNo:no, name:noteShared, note:'', pickupNo:'', arrivalTime:now, status:'pending', pickTime:null});
+    added++;
+  });
+  if(!saveParcels()){ toast(t('storageError')); return; }
+  render();
+  toast(t('batchDone').replace('{a}',added).replace('{d}',dup));
 }
 
 /* —— 寄售管理 —— */
@@ -1634,6 +1657,7 @@ function runAction(action, id, el){
     case 'product-save': saveProductFromForm(); break;
     /* 快递管理 */
     case 'parcel-add': addParcelFromForm(); break;
+    case 'parcel-batch': addParcelsBatch(); break;
     case 'parcel-pick': {
       const p=S.parcels.find(x=>x.id===id); if(p){ p.status='picked'; p.pickTime=new Date().toISOString(); p.requested=false; saveParcels(); render(); }
       break;
