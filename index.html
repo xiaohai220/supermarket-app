@@ -1245,7 +1245,7 @@ function adminParcels(){
       if(!hit) return false;
     }
     return true;
-  }).sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  }).sort((a,b)=>{ const ra=a.requested?0:1, rb=b.requested?0:1; if(ra!==rb) return ra-rb; return (b.arrivalTime||'').localeCompare(a.arrivalTime||''); });
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   if(PA.page > totalPages) PA.page = totalPages;
   if(PA.page < 1) PA.page = 1;
@@ -1332,7 +1332,7 @@ function adminParcelListCardHtml(){
       if(!hit) return false;
     }
     return true;
-  }).sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  }).sort((a,b)=>{ const ra=a.requested?0:1, rb=b.requested?0:1; if(ra!==rb) return ra-rb; return (b.arrivalTime||'').localeCompare(a.arrivalTime||''); });
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   if(PA.page > totalPages) PA.page = totalPages;
   if(PA.page < 1) PA.page = 1;
@@ -1400,7 +1400,7 @@ function adminParcelListRowsHtml(){
       if(!hit) return false;
     }
     return true;
-  }).sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
+  }).sort((a,b)=>{ const ra=a.requested?0:1, rb=b.requested?0:1; if(ra!==rb) return ra-rb; return (b.arrivalTime||'').localeCompare(a.arrivalTime||''); });
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   if(PA.page > totalPages) PA.page = totalPages;
   if(PA.page < 1) PA.page = 1;
