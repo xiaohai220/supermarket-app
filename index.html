@@ -422,7 +422,7 @@ const I18N = {
     productsCount:'共 {n} 件商品',
     parcelsTitle:'快递查询', trackingPlaceholder:'请输入快递运单号', checkBtn:'查询',
     parcelName:'收件人昵称', parcelNamePh:'如：阿里妈妈',
-    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', plistPh:'搜昵称 / 单号 / 单号后四位 / 编号', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
+    parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', plistPh:'搜昵称 / 单号 / 单号后四位', pickupPh:'按编号查（如⑦）', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
     statusReview:'取件中', reviewTip:'已申请取件，等待店员确认', requestPickTip:'点击申请取件', requestBadge:'客户申请取件', requestSent:'已提交取件申请，等待店员确认', rejectRequest:'驳回申请', rejected:'已驳回申请', withdrawTip:'再次点击撤回取件申请', withdrawn:'已撤回取件申请', requestTime:'申请时间',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
     enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取件', statusDomestic:'国内', editParcel:'编辑快递', saveEdit:'保存', cancel:'取消',
@@ -494,7 +494,7 @@ const I18N = {
     productsCount:'{n} items',
     parcelsTitle:'Parcel Pickup', trackingPlaceholder:'Enter tracking number', checkBtn:'Check',
     parcelName:'Recipient nickname', parcelNamePh:'e.g. Auntie Li',
-    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', plistPh:'Search name / No. / last 4 / pickup No.', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
+    parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', plistPh:'Search name / No. / last 4', pickupPh:'By pickup No.', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
     statusReview:'Picking up', reviewTip:'Pickup requested, waiting for staff', requestPickTip:'Tap to request pickup', requestBadge:'Customer requested pickup', requestSent:'Pickup request sent, waiting for staff', rejectRequest:'Reject request', rejected:'Request rejected', withdrawTip:'Tap again to withdraw request', withdrawn:'Request withdrawn', requestTime:'Requested at',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
     enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up', statusDomestic:'Domestic', editParcel:'Edit parcel', saveEdit:'Save', cancel:'Cancel',
@@ -778,7 +778,7 @@ function consignCardHtml(c, cur){
 /* ===== 视图状态 ===== */
 const PS = { q:'', cat:'all', sort:'default', stock:'all' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
-const PL = { q:'', status:'all', page:1, date:'' }; // 客户快递列表筛选
+const PL = { q:'', pickup:'', status:'all', page:1, date:'' }; // 客户快递列表筛选
 const PA = { filter:'all', q:'', page:1 };                 // 快递管理
 const PAGE_SIZE = 10;
 let ADMIN_OK = false;
@@ -995,9 +995,12 @@ function publicParcelList(){
       const no = (p.trackingNo||'').toLowerCase();
       const last4 = no.slice(-4);
       const name = (p.name||'').toLowerCase();
-      const pick = (p.pickupNo||'').toLowerCase();
-      return no.includes(q) || last4.includes(q) || name.includes(q) || pick===q || pick.includes(q);
+      return no.includes(q) || last4.includes(q) || name.includes(q);
     });
+  }
+  if(PL.pickup){
+    const pk = PL.pickup.trim().toLowerCase();
+    list = list.filter(p=> (p.pickupNo||'').toLowerCase().includes(pk));
   }
   const chips = [['all',t('filterAll')],['pending',t('statusPending')],['picked',t('statusPicked')]]
     .map(x=>'<button class="chip '+(PL.status===x[0]?'on':'')+'" data-action="plist-filter" data-id="'+x[0]+'">'+esc(x[1])+'</button>').join('');
@@ -1039,7 +1042,10 @@ function publicParcelList(){
   }
   return '<div class="card admin-panel" style="margin-top:16px">'+
     '<div class="panel-head"><h3>'+esc(t('parcelAll'))+'</h3><span class="count num">'+esc(String(list.length))+' / '+esc(String(total))+'</span></div>'+
-    '<div class="search-wrap" style="margin-bottom:8px">'+ICONS.search+'<input id="plist-search" data-action="plist-search" placeholder="'+esc(t('plistPh'))+'" value="'+esc(PL.q)+'"></div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">'+
+      '<div class="search-wrap" style="flex:1;min-width:160px">'+ICONS.search+'<input id="plist-search" data-action="plist-search" placeholder="'+esc(t('plistPh'))+'" value="'+esc(PL.q)+'"></div>'+
+      '<div class="search-wrap" style="flex:0 0 130px">'+ICONS.tag+'<input id="plist-pickup" data-action="plist-pickup-search" placeholder="'+esc(t('pickupPh'))+'" value="'+esc(PL.pickup)+'"></div>'+
+    '</div>'+
     '<div class="chips" style="margin-bottom:10px">'+chips+'</div>'+
     '<div class="date-row" style="margin-bottom:10px"><label class="date-label">'+esc(t('arrivalDate'))+'</label><input type="date" id="plist-date" value="'+esc(PL.date)+'"></div>'+
     '<div class="p2 p2-head">'+
@@ -1906,6 +1912,7 @@ document.addEventListener('input', e=>{
     if(c) c.textContent = fmtCount(t('productsCount'),{n:list.length});
   }
   else if(act==='parcel-search'){ PA.q = t.value; render(); }
+  else if(act==='plist-pickup-search'){ PL.pickup = t.value; PL.page = 1; render(); }
   else if(act==='plist-search'){ PL.q = t.value; PL.page = 1;
     const wrap = document.querySelector('.admin-panel .panel-head');
     // 局部重渲染列表区域，避免输入框失焦
