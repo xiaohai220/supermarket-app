@@ -425,7 +425,7 @@ const I18N = {
     parcelTail:'尾号', parcelTailPh:'手机后4位', parcelAll:'全部快递', plistPh:'搜昵称 / 单号 / 单号后四位', pickupPh:'按编号查（如⑦）', sortArrival:'到店时间↓', sortPickup:'编号↑', parcelNote:'备注', parcelNotePh:'如：9栋3单元',
     statusReview:'取件中', reviewTip:'已申请取件，等待店员确认', requestPickTip:'点击申请取件', requestBadge:'客户申请取件', requestSent:'已提交取件申请，等待店员确认', rejectRequest:'驳回申请', rejected:'已驳回申请', withdrawTip:'再次点击撤回取件申请', withdrawn:'已撤回取件申请', requestTime:'申请时间',
     parcelPickupNo:'取件编号', parcelPickupNoPh:'如：⑦',
-    enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取件', statusDomestic:'国内', editParcel:'编辑快递', saveEdit:'保存', cancel:'取消',
+    enterTracking:'请输入运单号', statusPending:'待取', statusPicked:'已取件', statusDomestic:'国内', toggleDomestic:'国内/待取', editParcel:'编辑快递', saveEdit:'保存', cancel:'取消',
     arrivalTime:'到店时间', pickTime:'取走时间', shelf:'货架号', trackingNo:'运单号', status:'状态', arrivalDate:'按到店日期',
     notFoundTitle:'未找到该运单', notFoundDesc:'请核对运单号是否输入正确，或到服务台咨询工作人员。',
     resultFound:'查询结果',
@@ -497,7 +497,7 @@ const I18N = {
     parcelTail:'Tail No.', parcelTailPh:'Last 4 digits', parcelAll:'All parcels', plistPh:'Search name / No. / last 4', pickupPh:'By pickup No.', sortArrival:'Arrival↓', sortPickup:'Pickup↑', parcelNote:'Note', parcelNotePh:'e.g. Bldg 9 Unit 3',
     statusReview:'Picking up', reviewTip:'Pickup requested, waiting for staff', requestPickTip:'Tap to request pickup', requestBadge:'Customer requested pickup', requestSent:'Pickup request sent, waiting for staff', rejectRequest:'Reject request', rejected:'Request rejected', withdrawTip:'Tap again to withdraw request', withdrawn:'Request withdrawn', requestTime:'Requested at',
     parcelPickupNo:'Pickup No.', parcelPickupNoPh:'e.g. 7',
-    enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up', statusDomestic:'Domestic', editParcel:'Edit parcel', saveEdit:'Save', cancel:'Cancel',
+    enterTracking:'Please enter a tracking number', statusPending:'Waiting', statusPicked:'Picked up', statusDomestic:'Domestic', toggleDomestic:'Domestic/Wait', editParcel:'Edit parcel', saveEdit:'Save', cancel:'Cancel',
     arrivalTime:'Arrived at', pickTime:'Picked up at', shelf:'Shelf', trackingNo:'Tracking No.', status:'Status', arrivalDate:'By arrival date',
     notFoundTitle:'Tracking number not found', notFoundDesc:'Please check the number, or ask our staff at the service counter.',
     resultFound:'Result',
@@ -1295,6 +1295,7 @@ function adminParcels(){
           (off
             ? '<button class="btn btn-ghost btn-sm" data-action="parcel-undo" data-id="'+esc(p.id)+'">'+esc(t('undoPick'))+'</button>'
             : '<button class="btn btn-primary btn-sm" data-action="parcel-pick" data-id="'+esc(p.id)+'">'+ICONS.check+esc(t('markPicked'))+'</button>')+
+          (!off ? '<button class="btn btn-ghost btn-sm" data-action="parcel-domestic-toggle" data-id="'+esc(p.id)+'" title="'+esc(t('toggleDomestic'))+'">'+(p.status==='domestic'?'↩ '+esc(t('statusPending')):'🌏 '+esc(t('statusDomestic')))+'</button>' : '')+
           (!off && p.requested ? '<button class="btn btn-ghost btn-sm" data-action="parcel-reject" data-id="'+esc(p.id)+'">'+esc(t('rejectRequest'))+'</button>' : '')+
           '<button class="icon-btn" data-action="parcel-edit-open" data-id="'+esc(p.id)+'" title="'+esc(t('editParcel'))+'">'+(ICONS.edit||'✎')+'</button>'+
           '<button class="icon-btn" data-action="parcel-del" data-id="'+esc(p.id)+'" title="'+esc(t('delete'))+'">'+ICONS.trash+'</button>'+
@@ -1935,6 +1936,7 @@ function runAction(action, id, el){
         saveParcels(); render(); toast(t('deleted'));
       });
       break;
+    case 'parcel-domestic-toggle': { const p=S.parcels.find(x=>x.id===id); if(p && p.status!=='picked'){ p.status = (p.status==='domestic')?'pending':'domestic'; saveParcels(); } const area=document.getElementById('pa-list-area'); if(area) area.innerHTML=adminParcelListRowsHtml(); else render(); break; }
     case 'parcel-filter': PA.filter = id; PA.page = 1; render(); break;
     case 'plist-filter': PL.status = id; PL.page = 1; render(); break;
     case 'plist-sort': if(PL.sort===id){ PL.dir = (PL.dir==='asc'?'desc':'asc'); } else { PL.sort = id; PL.dir = (id==='pickup'?'asc':'desc'); } PL.page = 1; render(); break;
