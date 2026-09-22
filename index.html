@@ -415,7 +415,7 @@ const I18N = {
     modParcels:'快递查询', modParcelsDesc:'输入快递运单号，查询您的快递是否已被取走',
     modConsign:'二手寄售', modConsignDesc:'浏览店内二手寄售物品，或提交您的物品申请寄售',
     statProducts:'件商品', statPending:'件待取', statOnSale:'件在售',
-    productsTitle:'商品展示', searchPlaceholder:'搜索商品名称…', allCats:'全部',
+    productsTitle:'商品展示', searchPlaceholder:'搜索商品名称…', parcelSearchPh:'单号 / 编号 / 昵称', allCats:'全部',
     sortDefault:'默认排序', sortPriceAsc:'价格从低到高', sortPriceDesc:'价格从高到低',
     inStock:'有货', outOfStock:'缺货', noImage:'暂无图片',
     emptyProductsTitle:'暂无商品', emptyProductsDesc:'店主可在首页底部「管理模式」中添加商品',
@@ -487,7 +487,7 @@ const I18N = {
     modParcels:'Parcel Pickup', modParcelsDesc:'Enter your tracking number to check if the parcel has been picked up',
     modConsign:'Second-hand', modConsignDesc:'Browse consigned second-hand items, or submit your own item to consign',
     statProducts:'items', statPending:'waiting', statOnSale:'on sale',
-    productsTitle:'Products', searchPlaceholder:'Search product name…', allCats:'All',
+    productsTitle:'Products', searchPlaceholder:'Search product name…', parcelSearchPh:'Tracking / No. / Name', allCats:'All',
     sortDefault:'Default', sortPriceAsc:'Price: low to high', sortPriceDesc:'Price: high to low',
     inStock:'In stock', outOfStock:'Out of stock', noImage:'No image',
     emptyProductsTitle:'No products yet', emptyProductsDesc:'The owner can add products in "Staff Mode" at the bottom of the home page',
@@ -1222,7 +1222,13 @@ function adminParcels(){
   const filtered = list.filter(p=>{
     if(PA.filter==='pending' && p.status!=='pending') return false;
     if(PA.filter==='picked' && p.status!=='picked') return false;
-    if(PA.q && !p.trackingNo.toLowerCase().includes(PA.q.toLowerCase())) return false;
+    if(PA.q){
+      const q=PA.q.toLowerCase();
+      const hit = (p.trackingNo||'').toLowerCase().includes(q)
+        || (p.pickupNo||'').toLowerCase().includes(q)
+        || (p.name||'').toLowerCase().includes(q);
+      if(!hit) return false;
+    }
     return true;
   }).sort((a,b)=>(b.arrivalTime||'').localeCompare(a.arrivalTime||''));
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -1298,7 +1304,7 @@ function adminParcels(){
     '<div class="card admin-panel">'+
       '<div class="panel-head"><h3>'+esc(t('parcelList'))+'</h3><span class="count num">'+esc(fmtCount(t('parcelCount'),{n:S.parcels.length,p:pendingCount()}))+'</span></div>'+
       '<div class="chips" style="margin-bottom:10px">'+filters+'</div>'+
-      '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-action="parcel-search" data-enter="parcel-search" placeholder="'+esc(t('searchPlaceholder'))+'" value="'+esc(PA.q)+'"></div>'+
+      '<div class="search-wrap" style="margin-bottom:6px">'+ICONS.search+'<input id="pa-search" data-action="parcel-search" data-enter="parcel-search" placeholder="'+esc(t('parcelSearchPh'))+'" value="'+esc(PA.q)+'"></div>'+
       rows+
       pagerHtml(PA.page, totalPages, 'parcel-page')+
     '</div>'+
