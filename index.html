@@ -1912,15 +1912,15 @@ document.addEventListener('input', e=>{
     if(c) c.textContent = fmtCount(t('productsCount'),{n:list.length});
   }
   else if(act==='parcel-search'){ PA.q = t.value; render(); }
-  else if(act==='plist-pickup-search'){ PL.pickup = t.value; PL.page = 1; render(); }
-  else if(act==='plist-search'){ PL.q = t.value; PL.page = 1;
-    const wrap = document.querySelector('.admin-panel .panel-head');
-    // 局部重渲染列表区域，避免输入框失焦
+  else if(act==='plist-search' || act==='plist-pickup-search'){
+    if(act==='plist-search') PL.q = t.value; else PL.pickup = t.value;
+    PL.page = 1;
     const card = t.closest('.admin-panel');
     if(card){
       const html = publicParcelList();
       card.outerHTML = html;
-      const ni = document.getElementById('plist-search');
+      const keep = act==='plist-search' ? 'plist-search' : 'plist-pickup';
+      const ni = document.getElementById(keep);
       if(ni){ ni.focus(); ni.setSelectionRange(ni.value.length, ni.value.length); }
     }
   }
