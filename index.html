@@ -770,7 +770,7 @@ function consignCardHtml(c, cur){
 }
 
 /* ===== 视图状态 ===== */
-const PS = { q:'', cat:'all', sort:'default' };   // 商品视图
+const PS = { q:'', cat:'all', sort:'default', stock:'all' };   // 商品视图
 const PQ = { tracking:'', searched:false, result:null }; // 快递查询
 const PL = { q:'', status:'all', page:1, date:'' }; // 客户快递列表筛选
 const PA = { filter:'all', q:'', page:1 };                 // 快递管理
@@ -880,6 +880,8 @@ function prodFiltered(){
   let list = S.products.slice();
   if(PS.cat && PS.cat!=='all') list = list.filter(p=>p.categoryId===PS.cat);
   if(PS.q){ const q=PS.q.toLowerCase(); list = list.filter(p=>(p.nameZh||'').toLowerCase().includes(q)); }
+  if(PS.stock==='yes') list = list.filter(p=>p.inStock);
+  else if(PS.stock==='no') list = list.filter(p=>!p.inStock);
   if(PS.sort==='priceAsc') list.sort((a,b)=>(a.price||0)-(b.price||0));
   else if(PS.sort==='priceDesc') list.sort((a,b)=>(b.price||0)-(a.price||0));
   return list;
@@ -913,12 +915,15 @@ function viewProducts(){
   const list = prodFiltered();
   const chips = '<button class="chip '+(PS.cat==='all'?'on':'')+'" data-action="prod-cat" data-id="all">'+esc(t('allCats'))+'</button>'+
     S.settings.categories.map(c=>'<button class="chip '+(PS.cat===c.id?'on':'')+'" data-action="prod-cat" data-id="'+esc(c.id)+'">'+esc(c.zh||c.en)+'</button>').join('');
+  const stockChips = [['all','全部'],['yes','有货'],['no','缺货']]
+    .map(o=>'<button class="chip stock-chip '+(PS.stock===o[0]?'on':'')+'" data-action="prod-stock" data-id="'+o[0]+'">'+o[1]+'</button>').join('');
   const sortOpts = [['default',t('sortDefault')],['priceAsc',t('sortPriceAsc')],['priceDesc',t('sortPriceDesc')]]
     .map(o=>'<option value="'+o[0]+'" '+(PS.sort===o[0]?'selected':'')+'>'+esc(o[1])+'</option>').join('');
   return pageHead(t('productsTitle'))+
     '<div class="toolbar card">'+
       '<div class="search-wrap">'+ICONS.search+'<input id="prod-search" data-action="prod-search-live" placeholder="'+esc(t('searchPlaceholder'))+'" value="'+esc(PS.q)+'"></div>'+
       '<div class="chips">'+chips+'</div>'+
+      '<div class="chips">'+stockChips+'</div>'+
       '<div class="sort-row">'+
         '<select data-action="prod-sort">'+sortOpts+'</select>'+
         '<span class="count num" id="prod-count">'+esc(fmtCount(t('productsCount'),{n:list.length}))+'</span>'+
@@ -1484,6 +1489,7 @@ function runAction(action, id, el){
     case 'admin-tab': go('#/admin?tab='+id); break;
     /* 商品客户视图 */
     case 'prod-cat': PS.cat = id; render(); break;
+    case 'prod-stock': PS.stock = id; render(); break;
     case 'prod-sort': PS.sort = document.querySelector('[data-action="prod-sort"]').value; render(); break;
     case 'prod-search': PS.q = document.getElementById('prod-search').value; render(); break;
     /* 快递查询 */
