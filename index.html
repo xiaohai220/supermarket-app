@@ -92,7 +92,7 @@ svg{display:block;flex-shrink:0}
 /* ============ 首页模块卡 ============ */
 .home-main{margin-top:6px}
 .home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
-.module-card{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;cursor:pointer;transition:transform .14s ease,box-shadow .14s ease;display:flex;flex-direction:column;gap:10px}
+.module-card{position:relative;overflow:hidden;background:transparent;border:1px solid var(--line);border-radius:var(--radius);box-shadow:none;padding:24px;cursor:pointer;transition:transform .14s ease,box-shadow .14s ease;display:flex;flex-direction:column;gap:10px}
 .module-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--grad-primary);opacity:.85}
 .module-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
 .module-card:focus-visible{outline:3px solid var(--green-soft);outline-offset:2px}
