@@ -119,16 +119,13 @@ async function main() {
     check('0.3 默认基准货币为 PKR', api.S.settings.baseCurrency === 'PKR');
     check('0.4 默认有 5 个分类', Array.isArray(api.S.settings.categories) && api.S.settings.categories.length === 5);
     check('0.5 localStorage 已写入 sm_settings', !!api.store['sm_settings']);
-    check('0.6 首页渲染了超市名称', api.appHtml().includes('社区超市') || /Community/i.test(api.appHtml()));
-    check('0.7 首页含语言切换按钮', api.appHtml().includes('toggle-lang'));
+    check('0.6 首页渲染了超市名称', api.appHtml().includes('小向超市'));
+    check('0.6b 首页顶部含店铺地址电话', api.appHtml().includes('F7-1') && api.appHtml().includes('03175333055'));
   }
   {
     const api = boot();
-    api.runAction('toggle-lang', '', null);
-    check('0.8 语言切换后持久化到 localStorage', JSON.parse(api.store['sm_settings']).lang === 'en');
-    check('0.9 语言切换后界面变为英文', /Supermarket|Service/i.test(api.appHtml()));
-    api.runAction('toggle-lang', '', null); // 切回中文，避免污染后续阶段
-    check('0.9b 切回中文后持久化', JSON.parse(api.store['sm_settings']).lang === 'zh');
+    api.go('#/home'); api.render();
+    check('0.7 语言切换按钮已移除', !api.appHtml().includes('toggle-lang'));
   }
   {
     const api = boot();
